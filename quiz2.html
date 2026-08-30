@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Microeconomía - Demanda y Elasticidad</title>
+    <!-- Incluye MathJax para la renderización perfecta de fórmulas en LaTeX -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --background: #f3f4f6;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: 5px;
+            font-size: 1.8rem;
+        }
+
+        .progress-bar {
+            background-color: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            background-color: var(--primary-light);
+            height: 100%;
+            width: 5%;
+            transition: width 0.3s ease;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        /* 3D Flip Card Container */
+        .quiz-card-container {
+            perspective: 1000px;
+            width: 100%;
+            height: auto;
+            min-height: 480px;
+            margin-bottom: 20px;
+        }
+
+        .quiz-card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 480px;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-radius: 15px;
+        }
+
+        .quiz-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            background-color: var(--card-bg);
+            padding: 30px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            border: 3px solid var(--primary-light);
+        }
+
+        .card-back.correct-border {
+            border-color: var(--success);
+        }
+
+        .card-back.incorrect-border {
+            border-color: var(--danger);
+        }
+
+        .question-text {
+            font-size: 1.15rem;
+            font-weight: 600;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background-color: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px 15px;
+            text-align: left;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary-light);
+            background-color: #f0f7ff;
+        }
+
+        /* Back of the card elements */
+        .result-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .result-title.correct {
+            color: var(--success);
+        }
+
+        .result-title.incorrect {
+            color: var(--danger);
+        }
+
+        .feedback-text {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary-light);
+        }
+
+        .card-back.correct-border .feedback-text {
+            border-left-color: var(--success);
+        }
+
+        .card-back.incorrect-border .feedback-text {
+            border-left-color: var(--danger);
+        }
+
+        .next-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            align-self: center;
+            transition: background-color 0.2s;
+        }
+
+        .next-btn:hover {
+            background-color: var(--primary-light);
+        }
+
+        /* Results Screen */
+        .summary-screen {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .summary-score {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 20px 0;
+        }
+
+        .restart-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .restart-btn:hover {
+            background-color: var(--primary-light);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Quiz de Microeconomía</h1>
+        <p>Estudio de Elasticidades, Demanda y Gasto del Consumidor</p>
+    </header>
+
+    <div id="quiz-flow">
+        <div class="stats">
+            <span id="question-counter">Pregunta 1 de 20</span>
+            <span id="score-counter">Correctas: 0 | Incorrectas: 0</span>
+        </div>
+
+        <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+        </div>
+
+        <div class="quiz-card-container">
+            <div id="quiz-card" class="quiz-card">
+                <!-- Frente de la Tarjeta (Pregunta) -->
+                <div class="card-face card-front">
+                    <div id="question-text" class="question-text">Cargando pregunta...</div>
+                    <div id="options-container" class="options-list">
+                        <!-- Las opciones se generarán dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Reverso de la Tarjeta (Respuesta / Devolución) -->
+                <div id="card-back" class="card-face card-back">
+                    <div>
+                        <div id="result-title" class="result-title">¡Correcto!</div>
+                        <div id="feedback-text" class="feedback-text">Retroalimentación...</div>
+                    </div>
+                    <button id="next-btn" class="next-btn">Siguiente Pregunta</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla de Resultados Finales -->
+    <div id="summary-screen" class="summary-screen hidden">
+        <h2>¡Has completado el Quiz!</h2>
+        <p>Tu puntuación final es:</p>
+        <div id="summary-score" class="summary-score">0 / 20</div>
+        <p id="summary-message">Mensaje de desempeño</p>
+        <button id="restart-btn" class="restart-btn">Reiniciar Quiz</button>
+    </div>
+</div>
+
+<script>
+    // Datos del cuestionario perfectamente equilibrado (5 A, 5 B, 5 C, 5 D)
+    const quizData = [
+        {
+            question: "¿Cuál es la definición matemática general del coeficiente de elasticidad precio de la demanda (\\(\\varepsilon_{x,P_x}\\))?",
+            options: {
+                A: "Es la variación porcentual de la cantidad demandada del bien respecto a la variación porcentual de su propio precio: \\(\\frac{\\% \\Delta X}{\\% \\Delta P_x}\\).",
+                B: "Es la pendiente absoluta de la curva de demanda inversa: \\(\\frac{dP_x}{dX}\\).",
+                C: "Es la relación de utilidades marginales ponderada por el ingreso real del consumidor.",
+                D: "Es la variación absoluta en el consumo provocada por un cambio de un peso en el ingreso."
+            },
+            correct: "A",
+            correctFeedback: "¡Excelente! La elasticidad precio de la demanda (\\(\\varepsilon_{x,P_x}\\)) mide el cambio relativo o porcentual en la cantidad frente al cambio relativo o porcentual en el precio, lo cual elimina las dimensiones de las unidades físicas.",
+            incorrectFeedback: "Incorrecto. Recuerda que la elasticidad es una medida de sensibilidad relativa. Por lo tanto, se define como el cociente de las variaciones porcentuales (opción A), no de las variaciones absolutas o la simple pendiente."
+        },
+        {
+            question: "Para cambios infinitesimales (continuos), la fórmula de la elasticidad precio puntual de la demanda se expresa como:",
+            options: {
+                A: "\\(\\varepsilon_{x,P_x} = \\frac{\\partial P_x}{\\partial X} \\cdot \\frac{X}{P_x}\\).",
+                B: "\\(\\varepsilon_{x,P_x} = \\frac{\\partial X}{\\partial P_x} \\cdot \\frac{P_x}{X}\\).",
+                C: "\\(\\varepsilon_{x,P_x} = \\frac{X}{P_x} \\cdot \\frac{\\partial X}{\\partial P_x}\\).",
+                D: "\\(\\varepsilon_{x,P_x} = \\frac{\\partial X}{\\partial M} \\cdot \\frac{M}{X}\\)."
+            },
+            correct: "B",
+            correctFeedback: "¡Correcto! En términos de cálculo diferencial, la elasticidad puntual es el producto de la derivada parcial de la cantidad demandada respecto al precio (pendiente de la curva de demanda marshalliana) por el cociente entre el precio y la cantidad en ese punto específico.",
+            incorrectFeedback: "Incorrecto. La elasticidad puntual requiere la derivada parcial de la cantidad respecto al precio, multiplicada por el cociente precio-cantidad (opción B). Revisa el orden de los componentes."
+        },
+        {
+            question: "Cuando los cambios en el precio son discretos y de gran magnitud, se utiliza la fórmula de la elasticidad arco-promedio para evitar sesgos por el punto de partida. Esta se define como:",
+            options: {
+                A: "\\(\\varepsilon_{x,P_x} = \\frac{X_1 - X_0}{P_1 - P_0} \\cdot \\frac{P_0}{X_0}\\).",
+                B: "\\(\\varepsilon_{x,P_x} = \\frac{\\Delta X}{\\Delta P_x} \\cdot \\frac{P_1}{X_1}\\).",
+                C: "\\(\\varepsilon_{x,P_x} = \\frac{\\Delta X}{\\Delta P_x} \\cdot \\frac{P_0 + P_1}{X_0 + X_1}\\).",
+                D: "\\(\\varepsilon_{x,P_x} = \\frac{X_1 + X_0}{P_1 + P_0} \\cdot \\frac{P_1 - P_0}{X_1 - X_0}\\)."
+            },
+            correct: "C",
+            correctFeedback: "¡Excelente! La elasticidad arco utiliza la semisuma (o promedio) de los precios y de las cantidades como base común para el cálculo, lo que equivale matemáticamente a: \\(\\varepsilon = \\frac{\\Delta X}{\\Delta P_x} \\cdot \\frac{P_0 + P_1}{X_0 + X_1}\\).",
+            incorrectFeedback: "Incorrecto. Para evitar la asimetría del punto inicial, la elasticidad arco mide la sensibilidad a lo largo de un intervalo utilizando el promedio de precios y cantidades, lo que se modela con la opción C."
+        },
+        {
+            question: "Dada la función de demanda lineal \\(X = 100 - 2P_x\\), calcule el coeficiente de elasticidad precio puntual (\\(\\varepsilon_{x,P_x}\\)) cuando el precio es \\(P_x = 10\\).",
+            options: {
+                A: "\\(\\varepsilon_{x,P_x} = -2.00\\) (Demanda elástica).",
+                B: "\\(\\varepsilon_{x,P_x} = -0.50\\) (Demanda inelástica).",
+                C: "\\(\\varepsilon_{x,P_x} = -1.00\\) (Elasticidad unitaria).",
+                D: "\\(\\varepsilon_{x,P_x} = -0.25\\) (Demanda inelástica)."
+            },
+            correct: "D",
+            correctFeedback: "¡Perfecto! A \\(P_x=10\\), la cantidad demandada es \\(X = 100 - 2(10) = 80\\). La derivada de \\(X\\) respecto a \\(P_x\\) es \\(-2\\). Reemplazando: \\(\\varepsilon = -2 \\cdot \\frac{10}{80} = -0.25\\). Al ser su valor absoluto menor a 1, la demanda es inelástica.",
+            incorrectFeedback: "Incorrecto. Recuerda aplicar la fórmula puntual: \\(\\varepsilon = \\frac{dX}{dP_x} \\cdot \\frac{P_x}{X}\\). Con \\(P_x = 10\\) obtienes \\(X=80\\), y la pendiente es \\(-2\\). Así, \\(-2 \\cdot \\frac{10}{80} = -0.25\\) (opción D)."
+        },
+        {
+            question: "Según los ejercicios de la Guía, tras bajar el precio de \\(P_{x0} = 20\\) a \\(P_{x1} = 10\\), el consumo de un consumidor cambia de \\(X_0 = 63\\) a \\(X_1 = 80\\). Calcule el coeficiente de elasticidad precio arco promedio de la demanda (\\(\\varepsilon_{x,P_x}\\)).",
+            options: {
+                A: "\\(\\varepsilon_{x,P_x} \\approx -0.357\\) (Demanda inelástica).",
+                B: "\\(\\varepsilon_{x,P_x} \\approx -1.500\\) (Demanda elástica).",
+                C: "\\(\\varepsilon_{x,P_x} \\approx -0.531\\) (Demanda inelástica).",
+                D: "\\(\\varepsilon_{x,P_x} \\approx -2.810\\) (Demanda elástica)."
+            },
+            correct: "A",
+            correctFeedback: "¡Excelente cálculo! Aplicando la fórmula arco: \\(\\varepsilon = \\frac{80 - 63}{10 - 20} \\cdot \\frac{20 + 10}{63 + 80} = \\frac{17}{-10} \\cdot \\frac{30}{143} \\approx -0.357\\). Al ser inelástica en valor absoluto, la curva Precio-Consumo presentará pendiente positiva.",
+            incorrectFeedback: "Incorrecto. Aplica la fórmula arco promedio: \\(\\varepsilon = \\frac{\\Delta X}{\\Delta P_x} \\cdot \\frac{P_0 + P_1}{X_0 + X_1}\\). Reemplazando los datos da: \\(\\frac{17}{-10} \\cdot \\frac{30}{143} \\approx -0.357\\) (opción A)."
+        },
+        {
+            question: "Si dos bienes \\(X\\) e \\(Y\\) presentan una elasticidad cruzada de la demanda positiva (\\(\\varepsilon_{x,P_y} > 0\\)), esto significa que los bienes son:",
+            options: {
+                A: "Complementarios en el consumo, pues el aumento en el precio de \\(Y\\) reduce el consumo de \\(X\\).",
+                B: "Sustitutos en el consumo (competitivos), ya que un aumento en el precio de \\(Y\\) incrementa la demanda de \\(X\\).",
+                C: "Independientes en el consumo, indicando que el precio de \\(Y\\) no afecta las compras de \\(X\\).",
+                D: "Bienes inferiores, puesto que la elasticidad cruzada mide variaciones del ingreso real."
+            },
+            correct: "B",
+            correctFeedback: "¡Así es! Si \\(\\varepsilon_{x,P_y} > 0\\), un encarecimiento de \\(Y\\) desvía a los consumidores hacia \\(X\\) (por ejemplo, té y café), lo que demuestra que se comportan como bienes sustitutos en el mercado.",
+            incorrectFeedback: "Incorrecto. Cuando la elasticidad cruzada es positiva, la variación del precio de uno y la cantidad demandada del otro van en el mismo sentido. Esto caracteriza a los bienes sustitutos brutos (opción B)."
+        },
+        {
+            question: "Dada la función de demanda multivariada \\(Q_x = 1000 - 25P_x + 0.005M - 20P_y + 100P_z\\), calcule la elasticidad cruzada de la demanda del bien \\(X\\) respecto al precio del bien \\(Y\\) (\\(\\varepsilon_{x,P_y}\\)) si \\(M = 12000\\), \\(P_x = 50\\), \\(P_y = 40\\), \\(P_z = 10\\) y la cantidad resultante es \\(Q_x = 10\\).",
+            options: {
+                A: "1",
+                B: "-2",
+                C: "-80",
+                D: "-8"
+            },
+            correct: "C",
+            correctFeedback: "¡Perfecto! La derivada parcial es \\(\\frac{\\partial Q_x}{\\partial P_y} = -20\\). La elasticidad puntual cruzada es: \\(\\varepsilon_{x,P_y} = \\frac{\\partial Q_x}{\\partial P_y} \\cdot \\frac{P_y}{Q_x} = -20 \\cdot \\frac{40}{10} = -80\\). Al ser negativa, los bienes son complementarios.",
+            incorrectFeedback: "Incorrecto. Recuerda que la elasticidad cruzada se obtiene mediante \\(\\varepsilon_{x,P_y} = \\frac{\\partial Q_x}{\\partial P_y} \\cdot \\frac{P_y}{Q_x}\\). Aquí la derivada parcial es \\(-20\\), y el cociente es \\(40/10 = 4\\), lo que da \\(-80\\) (opción C)."
+        },
+        {
+            question: "Si la elasticidad ingreso de la demanda del bien \\(X\\) es estrictamente negativa (\\(\\varepsilon_{x,M} < 0\\)), el bien se clasifica como:",
+            options: {
+                A: "Bien normal, ya que su consumo aumenta cuando crece el ingreso.",
+                B: "Bien suntuario o de lujo, puesto que el consumo es muy sensible al ingreso.",
+                C: "Bien Giffen, dado que necesariamente viola la ley de la demanda.",
+                D: "Bien inferior, pues un aumento en el ingreso nominal del consumidor provoca una reducción en su cantidad demandada."
+            },
+            correct: "D",
+            correctFeedback: "¡Excelente! Los bienes inferiores tienen una elasticidad ingreso negativa. Al volverse más rico, el consumidor sustituye estos bienes por otros de mayor calidad y precio.",
+            incorrectFeedback: "Incorrecto. Una elasticidad ingreso negativa (\\(\\varepsilon_{x,M} < 0\\)) indica una relación inversa entre el ingreso y la cantidad demandada, lo cual define estrictamente a un bien inferior (opción D)."
+        },
+        {
+            question: "Un consumidor posee una función de utilidad que arroja una elasticidad ingreso de la demanda para el bien \\(X\\) de \\( \\varepsilon_{x,M} = 1.50 \\). ¿Cómo se clasifica este bien y qué significa matemáticamente su valor?",
+            options: {
+                A: "Bien normal suntuario (de lujo); significa que ante un aumento de 1% en el ingreso, la cantidad demandada del bien aumenta en un 1.5%.",
+                B: "Bien inferior; significa que el consumo cae un 1.5% ante un aumento del 1% en el ingreso.",
+                C: "Bien normal necesario; significa que el consumo crece pero menos que proporcionalmente al ingreso.",
+                D: "Bien independiente, pues su elasticidad es constante e igual a 1.5."
+            },
+            correct: "A",
+            correctFeedback: "¡Muy bien! Dado que \\(\\varepsilon_{x,M} > 1\\), el consumo crece en mayor proporción que el ingreso, clasificándolo como un bien normal suntuario o de lujo.",
+            incorrectFeedback: "Incorrecto. Al ser la elasticidad ingreso positiva y mayor que la unidad (\\(\\varepsilon_{x,M} = 1.50 > 1\\)), el bien es clasificado como normal suntuario o de lujo (opción A)."
+        },
+        {
+            question: "La relación de Amoroso-Robinson es una expresión fundamental que vincula el ingreso marginal (\\(IMg\\)) de una empresa con el precio de mercado del bien (\\(P_x\\)) y el valor absoluto de la elasticidad precio de la demanda (\\(|\\varepsilon_{x,P_x}|\\)). ¿Cuál es su formulación matemática correcta?",
+            options: {
+                A: "\\(IMg = P_x \\left(1 + \\frac{1}{|\\varepsilon_{x,P_x}|}\\right)\\)",
+                B: "\\(IMg = P_x \\left(1 - \\frac{1}{|\\varepsilon_{x,P_x}|}\\right)\\)",
+                C: "\\(IMg = P_x \\left(1 - |\\varepsilon_{x,P_x}|\\right)\\)",
+                D: "\\(IMg = \\frac{P_x}{1 - |\\varepsilon_{x,P_x}|}\\)"
+            },
+            correct: "B",
+            correctFeedback: "¡Perfecto! Esta fórmula de Amoroso-Robinson demuestra que para una firma que enfrenta una demanda con pendiente negativa, el ingreso marginal es menor al precio debido al impacto de la elasticidad.",
+            incorrectFeedback: "Incorrecto. La formulación matemática exacta de la relación de Amoroso-Robinson utilizando el valor absoluto de la elasticidad es: \\(IMg = P_x \\left(1 - \\frac{1}{|\\varepsilon_{x,P_x}|}\\right)\\) (opción B)."
+        },
+        {
+            question: "Haciendo uso de la relación de Amoroso-Robinson, si los consumidores se sitúan en un tramo de la curva de demanda que es elástico al precio (\\(|\\varepsilon_{x,P_x}| > 1\\)), ¿qué comportamiento experimentará el Ingreso Marginal (\\(IMg\\))?",
+            options: {
+                A: "Será negativo (\\(IMg < 0\\)), por lo que una reducción en el precio hará caer el ingreso total.",
+                B: "Será exactamente igual a cero (\\(IMg = 0\\)), maximizando el ingreso total de forma absoluta.",
+                C: "Será positivo (\\(IMg > 0\\)), lo que implica que una reducción en el precio (o aumento en la cantidad vendida) aumentará el Gasto Total de los consumidores.",
+                D: "Será infinito, debido a la perfecta elasticidad de la demanda de mercado."
+            },
+            correct: "C",
+            correctFeedback: "¡Exacto! Si la demanda es elástica, el término \\(1 / |\\varepsilon|\\) es menor a 1, haciendo que el factor \\((1 - 1/|\\varepsilon|)\\) sea positivo y, por ende, el \\(IMg > 0\\). En este tramo, reducir el precio eleva el Gasto Total de los consumidores.",
+            incorrectFeedback: "Incorrecto. En el tramo elástico de la demanda, el Ingreso Marginal es positivo (\\(IMg > 0\\)), puesto que el incremento de las cantidades demandadas compensa con creces la baja del precio."
+        },
+        {
+            question: "Si ante variaciones del precio del bien \\(X\\) (\\(P_x\\)) la Curva de Precio-Consumo (CPC) resulta ser completamente horizontal en el plano (\\(X, Y\\)), ¿qué valor asume el coeficiente de elasticidad precio de la demanda del bien \\(X\\)?",
+            options: {
+                A: "Elasticidad nula (\\(\\varepsilon_{x,P_x} = 0\\)), indicando una demanda perfectamente inelástica.",
+                B: "Elasticidad infinita (\\(|\\varepsilon_{x,P_x}| = \\infty\\)), indicando una demanda perfectamente elástica.",
+                C: "Elasticidad inelástica (\\(0 < |\\varepsilon_{x,P_x}| < 1\\)).",
+                D: "Elasticidad unitaria (\\(|\\varepsilon_{x,P_x}| = 1\\)), indicando que el gasto total en el bien permanece constante ante cambios de precio."
+            },
+            correct: "D",
+            correctFeedback: "¡Excelente! Si la CPC es horizontal, el consumo del bien \\(Y\\) es constante, lo que implica que el gasto en \\(X\\) no varía ante cambios en su precio. Esto define una elasticidad precio unitaria (\\(|\\varepsilon| = 1\\)).",
+            incorrectFeedback: "Incorrecto. Una curva Precio-Consumo horizontal refleja que ante cambios en \\(P_x\\), el consumidor gasta siempre la misma proporción de su presupuesto en el bien, lo que delata una elasticidad unitaria (\\(|\\varepsilon| = 1\\))."
+        },
+        {
+            question: "Si la Curva de Ingreso-Consumo (CIC) presenta una pendiente negativa (se inclina hacia atrás hacia el eje de las ordenadas \\(Y\\)), ¿qué información nos provee sobre la elasticidad ingreso y la naturaleza del bien \\(X\\)?",
+            options: {
+                A: "El bien \\(X\\) es inferior (\\(\\varepsilon_{x,M} < 0\\)), ya que al aumentar el ingreso total, el consumidor disminuye el consumo de \\(X\\) para comprar más del bien normal \\(Y\\).",
+                B: "El bien \\(X\\) es de lujo (\\(\\varepsilon_{x,M} > 1\\)), dado que su consumo aumenta a tasas crecientes.",
+                C: "Ambos bienes son independientes en sentido neto.",
+                D: "El bien \\(X\\) es normal necesario (\\(0 < \\varepsilon_{x,M} < 1\\))."
+            },
+            correct: "A",
+            correctFeedback: "¡Brillante! Una pendiente negativa en la CIC indica que a mayores niveles de ingreso, la cantidad demandada del bien \\(X\\) disminuye. Esto es la definición geométrica de un bien inferior con \\(\\varepsilon_{x,M} < 0\\).",
+            incorrectFeedback: "Incorrecto. Si la curva de Ingreso-Consumo se inclina hacia atrás hacia el eje \\(Y\\), significa que al aumentar el ingreso disminuye el consumo de \\(X\\), lo que indica que es un bien inferior (opción A)."
+        },
+        {
+            question: "Geométricamente, la curva de Engel para un bien necesario (\\(0 < \\varepsilon_{x,M} < 1\\)) se caracteriza por:",
+            options: {
+                A: "Tener pendiente negativa para todos los niveles de ingreso.",
+                B: "Tener pendiente positiva y ser cóncava, indicando que el consumo del bien crece a tasas decrecientes frente a incrementos del ingreso.",
+                C: "Tener pendiente positiva y ser estrictamente convexa respecto al origen.",
+                D: "Ser una línea recta que parte desde el origen con un ángulo exacto de 45 grados."
+            },
+            correct: "B",
+            correctFeedback: "¡Excelente! Para un bien necesario, la proporción del ingreso gastada en él disminuye a medida que el ingreso aumenta (Ley de Engel). Su curva de Engel tiene pendiente positiva pero es cóncava hacia el eje del ingreso.",
+            incorrectFeedback: "Incorrecto. Una curva de Engel de pendiente positiva y cóncava representa un bien necesario, donde el aumento de consumo es menos que proporcional al incremento del ingreso (opción B)."
+        },
+        {
+            question: "Debido a que la función de demanda del consumidor es homogénea de grado cero en precios e ingreso (ausencia de ilusión monetaria), el teorema de Euler demuestra que la suma de sus elasticidades debe cumplir la siguiente propiedad:",
+            options: {
+                A: "\\(\\varepsilon_{x,P_x} + \\varepsilon_{x,P_y} + \\varepsilon_{x,M} = 1\\)",
+                B: "\\(\\varepsilon_{x,P_x} - \\varepsilon_{x,P_y} + \\varepsilon_{x,M} = 0\\)",
+                C: "\\(\\varepsilon_{x,P_x} + \\varepsilon_{x,P_y} + \\varepsilon_{x,M} = 0\\)",
+                D: "\\(\\varepsilon_{x,P_x} \\cdot \\varepsilon_{x,P_y} \\cdot \\varepsilon_{x,M} = -1\\)"
+            },
+            correct: "C",
+            correctFeedback: "¡Perfecto! Al ser la demanda homogénea de grado cero, si duplicamos todos los precios y el ingreso, la cantidad demandada no cambia. Así, la suma de su elasticidad precio propio, cruzada e ingreso debe ser idénticamente nula (\\(\\varepsilon_{x,P_x} + \\varepsilon_{x,P_y} + \\varepsilon_{x,M} = 0\\)).",
+            incorrectFeedback: "Incorrecto. Por homogeneidad de grado cero, la suma de la elasticidad precio propio, la elasticidad cruzada y la elasticidad ingreso de cualquier bien debe ser igual a cero (opción C)."
+        },
+        {
+            question: "Si la demanda de un bien es elástica (\\(|\\varepsilon_{x,P_x}| > 1\\)), ¿cuál será el impacto sobre el Gasto Total (\\(GT\\)) de los consumidores si se produce un incremento en el precio del propio bien?",
+            options: {
+                A: "El Gasto Total aumentará en la misma proporción que el incremento del precio.",
+                B: "El Gasto Total permanecerá constante, ya que el gasto es independiente del nivel de precios.",
+                C: "El Gasto Total aumentará debido a que se paga más por cada unidad consumida.",
+                D: "El Gasto Total disminuirá, ya que la reducción porcentual de la cantidad demandada será mayor que el incremento porcentual del precio."
+            },
+            correct: "D",
+            correctFeedback: "¡Brillante! Al ser la demanda elástica, la cantidad reacciona fuertemente ante cambios en el precio. Un aumento del precio causa una reducción de la cantidad tan grande que el Gasto Total disminuye.",
+            incorrectFeedback: "Incorrecto. Si la demanda es elástica, un aumento en el precio causa una reducción porcentual de la cantidad de mayor magnitud, por lo que el Gasto Total de los consumidores disminuirá (opción D)."
+        },
+        {
+            question: "Entre los determinantes de la elasticidad precio de la demanda de un bien, ¿cuál de las siguientes situaciones tiende a hacer que la demanda sea más elástica (sensible al precio)?",
+            options: {
+                A: "La existencia de una gran cantidad de bienes sustitutos cercanos disponibles en el mercado.",
+                B: "Que el gasto en dicho bien represente una porción insignificante o muy pequeña del presupuesto total del consumidor.",
+                C: "Que el periodo de tiempo que tiene el consumidor para ajustar sus hábitos de consumo ante un cambio de precio sea extremadamente corto.",
+                D: "Que se trate de un bien de consumo de primera necesidad y uso único con frecuencia de compra elevada."
+            },
+            correct: "A",
+            correctFeedback: "¡Correcto! A mayor disponibilidad de sustitutos cercanos en el mercado, más fácil resulta para el consumidor abandonar el consumo del bien cuando su precio aumenta, incrementando el coeficiente de elasticidad.",
+            incorrectFeedback: "Incorrecto. La presencia de bienes sustitutos cercanos es el factor más determinante para aumentar la sensibilidad de la demanda ante cambios de precio, volviéndola elástica (opción A)."
+        },
+        {
+            question: "Según el análisis dinámico de la demanda, la demanda de gasolina a largo plazo es sustancialmente más elástica que a corto plazo. ¿A qué se debe esto?",
+            options: {
+                A: "A que a corto plazo los consumidores pueden cambiar inmediatamente de automóvil por uno eléctrico o más eficiente.",
+                B: "A que el ajuste de hábitos y la sustitución de bienes duraderos asociados (como cambiar el parque automotor por vehículos más eficientes) requiere tiempo para concretarse.",
+                C: "A que a largo plazo la gasolina se convierte en un bien complementario perfecto de la recreación.",
+                D: "A la presencia del efecto esnob que reduce la elasticidad en el corto plazo."
+            },
+            correct: "B",
+            correctFeedback: "¡Excelente! A corto plazo, el consumidor solo puede reducir viajes de forma limitada (demanda inelástica). A largo plazo, puede sustituir su automóvil por uno de menor consumo, haciendo que la demanda de gasolina sea mucho más elástica.",
+            incorrectFeedback: "Incorrecto. El ajuste del consumo de bienes durables complementarios (como los automóviles) requiere tiempo; por ende, a largo plazo la elasticidad es significativamente mayor."
+        },
+        {
+            question: "Un productor vende su bien a un precio de \\(P_x = \\$100\\) en un tramo de la demanda donde la elasticidad precio es \\(\\varepsilon_{x,P_x} = -2.5\\). Utilizando la relación de Amoroso-Robinson, ¿a cuánto equivale el Ingreso Marginal (\\(IMg\\))?",
+            options: {
+                A: "\\(IMg = \\$150\\)",
+                B: "\\(IMg = \\$75\\)",
+                C: "\\(IMg = \\$60\\)",
+                D: "\\(IMg = \\$40\\)"
+            },
+            correct: "C",
+            correctFeedback: "¡Excelente cálculo! Aplicando Amoroso-Robinson: \\(IMg = P_x \\left(1 - \\frac{1}{|\\varepsilon|}\\right) = 100 \\left(1 - \\frac{1}{2.5}\\right) = 100(1 - 0.4) = \\$60\\).",
+            incorrectFeedback: "Incorrecto. Usa la fórmula de Amoroso-Robinson: \\(IMg = 100 \\left(1 - \\frac{1}{2.5}\\right)\\). Como \\(1/2.5 = 0.4\\), el cálculo da \\(100 \\times 0.6 = \\$60\\) (opción C)."
+        },
+        {
+            question: "La elasticidad precio de la demanda de cigarrillos se estima en \\(\\varepsilon_{x,P_x} = -0.2\\) (inelástica). Si el gobierno aplica un impuesto que eleva el precio de venta de los cigarrillos en un 15%, ¿qué sucederá con el Gasto Total (\\(GT\\)) de los consumidores?",
+            options: {
+                A: "El Gasto Total disminuirá debido a la reducción del consumo ante el impuesto.",
+                B: "El Gasto Total permanecerá perfectamente constante sin experimentar cambios.",
+                C: "El Gasto Total aumentará exactamente en un 15% junto con el precio.",
+                D: "El Gasto Total de los consumidores aumentará, ya que la reducción porcentual de la cantidad consumida (3%) será menor que el incremento porcentual del precio (15%)."
+            },
+            correct: "D",
+            correctFeedback: "¡Perfecto! Al ser la demanda inelástica, la cantidad consumida disminuye en menor proporción que la subida del precio. El incremento del precio del 15% causa solo una caída del 3% en las cantidades (\\(-0.2 \\times 15\\%\\)), resultando en un aumento neto del Gasto Total.",
+            incorrectFeedback: "Incorrecto. En demandas inelásticas (\\(|\\varepsilon| < 1\\)), el aumento del precio supera proporcionalmente la caída en la cantidad demandada, lo cual provoca que el Gasto Total de los consumidores aumente (opción D)."
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let correctAnswers = 0;
+    let incorrectAnswers = 0;
+
+    const quizFlowEl = document.getElementById('quiz-flow');
+    const questionTextEl = document.getElementById('question-text');
+    const optionsContainerEl = document.getElementById('options-container');
+    const quizCardEl = document.getElementById('quiz-card');
+    const cardBackEl = document.getElementById('card-back');
+    const resultTitleEl = document.getElementById('result-title');
+    const feedbackTextEl = document.getElementById('feedback-text');
+    const nextBtn = document.getElementById('next-btn');
+    const progressFillEl = document.getElementById('progress-fill');
+    const questionCounterEl = document.getElementById('question-counter');
+    const scoreCounterEl = document.getElementById('score-counter');
+
+    const summaryScreenEl = document.getElementById('summary-screen');
+    const summaryScoreEl = document.getElementById('summary-score');
+    const summaryMessageEl = document.getElementById('summary-message');
+    const restartBtn = document.getElementById('restart-btn');
+
+    function loadQuestion() {
+        // Reiniciar clases de la tarjeta
+        quizCardEl.classList.remove('flipped');
+        cardBackEl.classList.remove('correct-border', 'incorrect-border');
+
+        const currentQuestion = quizData[currentQuestionIndex];
+        
+        // Actualizar textos e indicativos
+        questionCounterEl.textContent = `Pregunta ${currentQuestionIndex + 1} de ${quizData.length}`;
+        questionTextEl.innerHTML = currentQuestion.question;
+        
+        // Calcular porcentaje progreso
+        const progressPercentage = ((currentQuestionIndex) / quizData.length) * 100;
+        progressFillEl.style.width = `${progressPercentage === 0 ? 5 : progressPercentage}%`;
+
+        // Generar opciones de respuesta
+        optionsContainerEl.innerHTML = '';
+        Object.entries(currentQuestion.options).forEach(([key, value]) => {
+            const button = document.createElement('button');
+            button.className = 'option-btn';
+            button.innerHTML = `<strong>${key})</strong> ${value}`;
+            button.onclick = () => selectOption(key);
+            optionsContainerEl.appendChild(button);
+        });
+
+        // Forzar a MathJax a procesar el nuevo contenido cargado
+        if (window.MathJax) {
+            MathJax.typesetPromise();
+        }
+    }
+
+    function selectOption(selectedKey) {
+        const currentQuestion = quizData[currentQuestionIndex];
+        const isCorrect = selectedKey === currentQuestion.correct;
+
+        if (isCorrect) {
+            correctAnswers++;
+            resultTitleEl.textContent = "¡Correcto!";
+            resultTitleEl.className = "result-title correct";
+            cardBackEl.classList.add('correct-border');
+            feedbackTextEl.innerHTML = currentQuestion.correctFeedback;
+        } else {
+            incorrectAnswers++;
+            resultTitleEl.textContent = "Incorrecto";
+            resultTitleEl.className = "result-title incorrect";
+            cardBackEl.classList.add('incorrect-border');
+            feedbackTextEl.innerHTML = currentQuestion.incorrectFeedback;
+        }
+
+        // Actualizar estadísticas del marcador
+        scoreCounterEl.textContent = `Correctas: ${correctAnswers} | Incorrectas: ${incorrectAnswers}`;
+
+        // Girar la tarjeta para mostrar la devolución
+        quizCardEl.classList.add('flipped');
+
+        if (window.MathJax) {
+            MathJax.typesetPromise();
+        }
+    }
+
+    nextBtn.onclick = () => {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) {
+            loadQuestion();
+        } else {
+            showSummary();
+        }
+    };
+
+    function showSummary() {
+        quizFlowEl.classList.add('hidden');
+        summaryScreenEl.classList.remove('hidden');
+        summaryScoreEl.textContent = `${correctAnswers} / ${quizData.length}`;
+
+        const scorePercent = (correctAnswers / quizData.length) * 100;
+        if (scorePercent >= 90) {
+            summaryMessageEl.textContent = "¡Espectacular! Has demostrado un nivel académico excepcional y un absoluto dominio en el cálculo y clasificación de elasticidades (precio, cruzada e ingreso) y las relaciones de Amoroso-Robinson.";
+        } else if (scorePercent >= 70) {
+            summaryMessageEl.textContent = "¡Excelente! Tienes muy claro el comportamiento y clasificación de las elasticidades. Te sugerimos revisar las descomposiciones de Cournot y Engel para lograr el puntaje perfecto.";
+        } else {
+            summaryMessageEl.textContent = "Buen intento. Te recomendamos repasar los capítulos de elasticidad y optimización en las fuentes para consolidar tus conocimientos en la materia.";
+        }
+    }
+
+    restartBtn.onclick = () => {
+        currentQuestionIndex = 0;
+        correctAnswers = 0;
+        incorrectAnswers = 0;
+        scoreCounterEl.textContent = `Correctas: 0 | Incorrectas: 0`;
+        summaryScreenEl.classList.add('hidden');
+        quizFlowEl.classList.remove('hidden');
+        loadQuestion();
+    };
+
+    // Cargar la primera pregunta al inicio
+    loadQuestion();
+</script>
+
+</body>
+</html>
