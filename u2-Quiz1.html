@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Microeconomía - Teoría del Consumidor</title>
+    <!-- Incluye MathJax para la renderización perfecta de fórmulas en LaTeX -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --background: #f3f4f6;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: 5px;
+            font-size: 1.8rem;
+        }
+
+        .progress-bar {
+            background-color: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            background-color: var(--primary-light);
+            height: 100%;
+            width: 5%;
+            transition: width 0.3s ease;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        /* 3D Flip Card Container */
+        .quiz-card-container {
+            perspective: 1000px;
+            width: 100%;
+            height: auto;
+            min-height: 480px;
+            margin-bottom: 20px;
+        }
+
+        .quiz-card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 480px;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-radius: 15px;
+        }
+
+        .quiz-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            background-color: var(--card-bg);
+            padding: 30px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            border: 3px solid var(--primary-light);
+        }
+
+        .card-back.correct-border {
+            border-color: var(--success);
+        }
+
+        .card-back.incorrect-border {
+            border-color: var(--danger);
+        }
+
+        .question-text {
+            font-size: 1.15rem;
+            font-weight: 600;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background-color: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px 15px;
+            text-align: left;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary-light);
+            background-color: #f0f7ff;
+        }
+
+        /* Back of the card elements */
+        .result-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .result-title.correct {
+            color: var(--success);
+        }
+
+        .result-title.incorrect {
+            color: var(--danger);
+        }
+
+        .feedback-text {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary-light);
+        }
+
+        .card-back.correct-border .feedback-text {
+            border-left-color: var(--success);
+        }
+
+        .card-back.incorrect-border .feedback-text {
+            border-left-color: var(--danger);
+        }
+
+        .next-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            align-self: center;
+            transition: background-color 0.2s;
+        }
+
+        .next-btn:hover {
+            background-color: var(--primary-light);
+        }
+
+        /* Results Screen */
+        .summary-screen {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .summary-score {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 20px 0;
+        }
+
+        .restart-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .restart-btn:hover {
+            background-color: var(--primary-light);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Quiz de Microeconomía</h1>
+        <p>Efecto Sustitución, Ingreso, Giffen y Curva de Demanda</p>
+    </header>
+
+    <div id="quiz-flow">
+        <div class="stats">
+            <span id="question-counter">Pregunta 1 de 20</span>
+            <span id="score-counter">Correctas: 0 | Incorrectas: 0</span>
+        </div>
+
+        <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+        </div>
+
+        <div class="quiz-card-container">
+            <div id="quiz-card" class="quiz-card">
+                <!-- Frente de la Tarjeta (Pregunta) -->
+                <div class="card-face card-front">
+                    <div id="question-text" class="question-text">Cargando pregunta...</div>
+                    <div id="options-container" class="options-list">
+                        <!-- Las opciones se generarán dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Reverso de la Tarjeta (Respuesta / Devolución) -->
+                <div id="card-back" class="card-face card-back">
+                    <div>
+                        <div id="result-title" class="result-title">¡Correcto!</div>
+                        <div id="feedback-text" class="feedback-text">Retroalimentación...</div>
+                    </div>
+                    <button id="next-btn" class="next-btn">Siguiente Pregunta</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla de Resultados Finales -->
+    <div id="summary-screen" class="summary-screen hidden">
+        <h2>¡Has completado el Quiz!</h2>
+        <p>Tu puntuación final es:</p>
+        <div id="summary-score" class="summary-score">0 / 20</div>
+        <p id="summary-message">Mensaje de desempeño</p>
+        <button id="restart-btn" class="restart-btn">Reiniciar Quiz</button>
+    </div>
+</div>
+
+<script>
+    // Datos de las 20 preguntas con opciones distribuidas equilibradamente
+    const quizData = [
+        {
+            question: "¿Qué condición debe cumplirse para que un bien sea clasificado como un Bien Giffen?",
+            options: {
+                A: "La curva de demanda debe tener pendiente negativa.",
+                B: "Debe ser un bien inferior donde el valor absoluto del Efecto Ingreso supere al Efecto Sustitución.",
+                C: "El bien debe ser normal y el Efecto Sustitución debe ser mayor que el Efecto Ingreso.",
+                D: "El Efecto Ingreso y el Efecto Sustitución deben ser de igual magnitud y actuar en el mismo sentido."
+            },
+            correct: "B",
+            correctFeedback: "¡Excelente! En un bien Giffen, el Efecto Ingreso es negativo y de magnitud suficiente para contrarrestar y superar el Efecto Sustitución, haciendo que la demanda tenga pendiente positiva.",
+            incorrectFeedback: "Incorrecto. Un bien Giffen viola la ley de la demanda (su curva de demanda tiene pendiente positiva) porque es un bien inferior muy particular donde el Efecto Ingreso negativo supera al Efecto Sustitución."
+        },
+        {
+            question: "Un consumidor adquiere inicialmente \\(x_0 = 40\\) unidades. El precio de \\(x\\) baja y, según el método de Hicks, para mantener su utilidad inicial a los nuevos precios debería consumir \\(x_B = 52\\). Finalmente, su nuevo equilibrio es \\(x_1 = 65\\). Calcule el Efecto Sustitución (ES).",
+            options: {
+                A: "\\(-12\\) unidades.",
+                B: "\\(25\\) unidades.",
+                C: "\\(12\\) unidades.",
+                D: "\\(13\\) unidades."
+            },
+            correct: "C",
+            correctFeedback: "¡Correcto! El Efecto Sustitución por el método de Hicks se calcula como la diferencia entre la cantidad de la canasta intermedia (\\(x_B\\)) y la cantidad inicial (\\(x_0\\)), es decir: \\(ES = x_B - x_0 = 52 - 40 = 12\\) unidades.",
+            incorrectFeedback: "Incorrecto. Recuerda que el Efecto Sustitución mide el movimiento a lo largo de la curva de indiferencia inicial desde el óptimo inicial (\\(x_0 = 40\\)) al punto de Hicks (\\(x_B = 52\\)). Por tanto, \\(ES = x_B - x_0 = 12\\) unidades."
+        },
+        {
+            question: "En el caso de bienes que son sustitutos brutos, ¿qué dirección toma la curva de Precio-Consumo ante una disminución de \\(P_x\\)?",
+            options: {
+                A: "Pendiente negativa, indicando que el consumo de \\(y\\) cae mientras el de \\(x\\) sube.",
+                B: "Horizontal, indicando que el consumo de \\(y\\) es independiente de \\(P_x\\).",
+                C: "Pendiente positiva, indicando que el consumo de ambos bienes aumenta.",
+                D: "Vertical, indicando que el consumo de \\(x\\) es constante."
+            },
+            correct: "A",
+            correctFeedback: "¡Exacto! Si los bienes son sustitutos brutos, una caída en \\(P_x\\) hace que se consuma más de \\(x\\) y menos de \\(y\\) (ya que \\(x\\) sustituye a \\(y\\)), resultando en una curva Precio-Consumo con pendiente negativa.",
+            incorrectFeedback: "Incorrecto. Si los bienes fuesen independientes en sentido neto o bruto (como en el caso Cobb-Douglas), la curva sería horizontal. Para sustitutos brutos, al bajar \\(P_x\\), la cantidad demandada de \\(y\\) disminuye mientras que la de \\(x\\) aumenta, lo que da una curva de Precio-Consumo de pendiente negativa."
+        },
+        {
+            question: "¿Cuál es el signo del Efecto Sustitución ante una disminución en el precio del propio bien \\(X\\) según la teoría del consumidor?",
+            options: {
+                A: "Siempre es positivo (si el precio disminuye, la cantidad disminuye).",
+                B: "Depende de si el bien es normal o inferior.",
+                C: "Es cero si las curvas de indiferencia son estrictamente convexas.",
+                D: "Siempre es negativo respecto a la variación del precio (si el precio disminuye, la cantidad demandada por este efecto siempre aumenta)."
+            },
+            correct: "D",
+            correctFeedback: "¡Muy bien! El Efecto Sustitución es siempre negativo respecto al precio debido a la convexidad de las curvas de indiferencia: una reducción en el precio relativo de un bien siempre incentiva su mayor consumo si se mantiene el nivel de utilidad constante.",
+            incorrectFeedback: "Incorrecto. No confundas el Efecto Sustitución con el Efecto Ingreso. El Efecto Sustitución de Hicks es matemáticamente no positivo (siempre va en sentido opuesto a la variación del precio) para cualquier tipo de bien."
+        },
+        {
+            question: "Ante una caída en el precio del bien \\(X\\) (\\(P_x\\)), ¿cómo se define el Efecto Ingreso?",
+            options: {
+                A: "Es la variación en el consumo provocada por el cambio en los precios relativos, manteniendo la utilidad constante.",
+                B: "Es la variación en el consumo provocada por el incremento en el poder adquisitivo (ingreso real) del consumidor al abaratarse el bien.",
+                C: "Es el aumento del ingreso nominal que el gobierno otorga para compensar la inflación.",
+                D: "Es la variación en la utilidad marginal del ingreso nominal."
+            },
+            correct: "B",
+            correctFeedback: "¡Perfecto! El Efecto Ingreso recoge el cambio en el poder adquisitivo del consumidor derivado de la variación de un precio, manteniendo constantes los precios relativos finales.",
+            incorrectFeedback: "Incorrecto. La opción que mantiene la utilidad constante define al Efecto Sustitución de Hicks. El Efecto Ingreso se debe a la variación del ingreso real del individuo al modificarse un precio."
+        },
+        {
+            question: "Si el bien \\(X\\) es un bien normal, ante una caída de su precio (\\(P_x\\)):",
+            options: {
+                A: "El ES aumenta el consumo, pero el EI lo disminuye.",
+                B: "El EI es negativo y supera al ES.",
+                C: "Tanto el Efecto Sustitución como el Efecto Ingreso actúan en el mismo sentido, aumentando la cantidad demandada de \\(X\\).",
+                D: "El Efecto Sustitución es nulo y todo el cambio se debe al Efecto Ingreso."
+            },
+            correct: "C",
+            correctFeedback: "¡Excelente! En los bienes normales, una caída del precio genera un Efecto Sustitución positivo (más consumo de \\(X\\)) y un Efecto Ingreso también positivo (al ser más rico el consumidor, consume más de este bien normal), reforzándose mutuamente.",
+            incorrectFeedback: "Incorrecto. Recuerda que para un bien normal, un aumento del ingreso real (causado por la caída del precio) aumenta la cantidad demandada. Por tanto, ambos efectos se suman en la misma dirección."
+        },
+        {
+            question: "Si el bien \\(X\\) es inferior (pero cumple la ley de la demanda), ante una disminución de su precio (\\(P_x\\)):",
+            options: {
+                A: "El Efecto Sustitución aumenta el consumo y el Efecto Ingreso lo disminuye, pero el valor absoluto del Efecto Sustitución es mayor (\\(|ES| > |EI|\\)).",
+                B: "Ambos efectos van en la misma dirección disminuyendo el consumo.",
+                C: "El Efecto Ingreso aumenta el consumo y supera al Efecto Sustitución.",
+                D: "El Efecto Sustitución es menor en magnitud que el Efecto Ingreso, provocando que la cantidad total demandada caiga."
+            },
+            correct: "A",
+            correctFeedback: "¡Muy bien! En un bien inferior ordinario, el Efecto Ingreso es negativo (al ser más rico, el consumidor prefiere comprar menos del bien inferior), pero no es tan grande como para superar al Efecto Sustitución de Hicks, por lo que el Efecto Total neto sigue siendo positivo.",
+            incorrectFeedback: "Incorrecto. Si el Efecto Ingreso superase al Efecto Sustitución, estaríamos ante un bien Giffen. Si cumple la ley de la demanda, la cantidad total demandada debe aumentar, lo que exige que el Efecto Sustitución domine."
+        },
+        {
+            question: "¿Cómo se define la curva de Precio-Consumo de un bien \\(X\\)?",
+            options: {
+                A: "Es la curva que relaciona el ingreso del consumidor con las cantidades demandadas del bien \\(X\\).",
+                B: "Es el mapa de curvas de indiferencia que muestra la tasa marginal de sustitución decreciente.",
+                C: "Es la proyección de los óptimos de Hicks en el plano de utilidad-precio.",
+                D: "Es la unión de las canastas óptimas de consumo resultantes de variar el precio de \\(X\\), manteniendo constantes el ingreso (\\(M\\)) y el precio del bien \\(Y\\) (\\(P_y\\))."
+            },
+            correct: "D",
+            correctFeedback: "¡Excelente definición! La curva Precio-Consumo rastrea los sucesivos equilibrios óptimos del consumidor cuando cambia el precio de un bien, ceteris paribus.",
+            incorrectFeedback: "Incorrecto. La relación con el ingreso define a la curva de Ingreso-Consumo (o la curva de Engel). La curva de Precio-Consumo se construye variando únicamente el precio del propio bien."
+        },
+        {
+            question: "¿De dónde se deduce geométricamente la curva de demanda de un bien \\(X\\)?",
+            options: {
+                A: "De la curva de Engel al proyectar los puntos en el plano \\((M, X)\\).",
+                B: "A partir de la proyección de los puntos de equilibrio de la curva de Precio-Consumo en el plano \\((P_x, X)\\).",
+                C: "De la curva de contrato de producción de la caja de Edgeworth.",
+                D: "De la senda de expansión de largo plazo del productor."
+            },
+            correct: "B",
+            correctFeedback: "¡Así es! Proyectando las combinaciones óptimas de precio y cantidad de la curva Precio-Consumo al gráfico con ejes de Precio y Cantidad se obtiene la curva de demanda marshalliana.",
+            incorrectFeedback: "Incorrecto. La curva de demanda relaciona precio y cantidad. Por tanto, se deriva proyectando la curva Precio-Consumo en el espacio de precios y cantidades del bien."
+        },
+        {
+            question: "Si dos bienes \\(X\\) e \\(Y\\) son complementarios brutos, ante una caída de \\(P_x\\), ¿qué pendiente presentará la curva Precio-Consumo?",
+            options: {
+                A: "Pendiente negativa, indicando que el consumo de \\(y\\) cae y el de \\(x\\) sube.",
+                B: "Será una línea completamente horizontal.",
+                C: "Pendiente positiva, indicando que el consumo tanto de \\(x\\) como de \\(y\\) aumenta.",
+                D: "Será una línea completamente vertical."
+            },
+            correct: "C",
+            correctFeedback: "¡Excelente! En bienes complementarios brutos, al bajar el precio de \\(x\\), aumenta el consumo de \\(x\\) y también el de su complemento \\(y\\), lo cual genera una trayectoria con pendiente positiva en la curva de Precio-Consumo.",
+            incorrectFeedback: "Incorrecto. Si fuese de pendiente negativa, el consumo de \\(y\\) disminuiría (caso de sustitutos). Como son complementarios, el consumo de \\(y\\) se eleva junto con el de \\(x\\), resultando en una pendiente positiva."
+        },
+        {
+            question: "En la descomposición del efecto total según Hicks, la llamada 'variación compensatoria' del ingreso tiene como objetivo:",
+            options: {
+                A: "Retirar o compensar ingreso nominal al consumidor para situarlo exactamente en su nivel de utilidad original (\\(U_0\\)) a los nuevos precios.",
+                B: "Darle el ingreso necesario para que pueda adquirir exactamente la misma canasta de consumo original (\\(x_0, y_0\\)).",
+                C: "Duplicar su ingreso nominal si el precio del bien se reduce a la mitad.",
+                D: "Mantener constante el ingreso real en el sentido de Slutsky."
+            },
+            correct: "A",
+            correctFeedback: "¡Perfecto! Hicks define la constancia del ingreso real como la mantención de la utilidad inicial. Por ello, la compensación ajusta el ingreso para volver a la curva de indiferencia inicial \\(U_0\\) pero con la nueva relación de precios.",
+            incorrectFeedback: "Incorrecto. Comprar la misma canasta física es la compensación de Slutsky, no la de Hicks. Hicks busca mantener el mismo nivel de satisfacción o utilidad inicial."
+        },
+        {
+            question: "Un consumidor consume inicialmente \\(x_0 = 15\\) unidades de un bien. Tras una reducción del precio del bien \\(X\\), el nuevo óptimo del consumidor se sitúa en \\(x_1 = 35\\) unidades. Calcule el Efecto Total (ET).",
+            options: {
+                A: "\\(-20\\) unidades.",
+                B: "\\(50\\) unidades.",
+                C: "\\(1.5\\) unidades.",
+                D: "\\(20\\) unidades."
+            },
+            correct: "D",
+            correctFeedback: "¡Exacto! El Efecto Total es simplemente el cambio neto observado en la cantidad demandada: \\(ET = x_1 - x_0 = 35 - 15 = 20\\) unidades.",
+            incorrectFeedback: "Incorrecto. El Efecto Total se calcula como la diferencia entre la cantidad óptima final y la cantidad óptima inicial: \\(ET = x_1 - x_0 = 35 - 15 = 20\\) unidades."
+        },
+        {
+            question: "Utilizando los datos de un consumidor donde el consumo inicial es \\(x_0 = 30\\), la cantidad bajo el óptimo de Hicks es \\(x_B = 38\\), y la cantidad final tras el cambio de precio es \\(x_1 = 45\\). Calcule el Efecto Ingreso (EI) según el método de Hicks.",
+            options: {
+                A: "\\(8\\) unidades.",
+                B: "\\(7\\) unidades.",
+                C: "\\(15\\) unidades.",
+                D: "\\(-8\\) unidades."
+            },
+            correct: "B",
+            correctFeedback: "¡Correcto! El Efecto Ingreso según el método de Hicks se calcula como la diferencia entre la cantidad óptima final (\\(x_1\\)) y la cantidad intermedia de Hicks (\\(x_B\\)): \\(EI = x_1 - x_B = 45 - 38 = 7\\) unidades.",
+            incorrectFeedback: "Incorrecto. El Efecto Sustitución es \\(x_B - x_0 = 38 - 30 = 8\\) unidades. El Efecto Ingreso es \\(x_1 - x_B = 45 - 38 = 7\\) unidades. Ambos suman el Efecto Total de \\(15\\) unidades."
+        },
+        {
+            question: "¿Qué condición se cumple en el punto de elección óptima del consumidor (óptimo interior) entre un bien \\(X\\) y un bien \\(Y\\)?",
+            options: {
+                A: "\\(TMSC_{Y,X} = \\frac{P_x}{P_y}\\) (la tasa marginal de sustitución es igual al precio relativo de los bienes).",
+                B: "\\(TMSC_{Y,X} = P_x \\cdot P_y\\)",
+                C: "\\(TMSC_{Y,X} = \\frac{U_y}{U_x}\\)",
+                D: "\\(TMSC_{Y,X} = M\\)"
+            },
+            correct: "A",
+            correctFeedback: "¡Excelente! En el óptimo del consumidor, la pendiente de la curva de indiferencia (tasa marginal de sustitución) debe ser igual a la pendiente de la restricción presupuestaria (precio relativo de los bienes).",
+            incorrectFeedback: "Incorrecto. La condición de optimidad exige la tangencia entre la curva de indiferencia y la recta de balance, lo que equivale a la igualdad de la tasa marginal de sustitución (\\(TMSC_{Y,X} = \\frac{UMg_x}{UMg_y}\\)) con la relación de precios \\(\\frac{P_x}{P_y}\\)."
+        },
+        {
+            question: "Si la función de utilidad del consumidor es de tipo Cobb-Douglas (\\(U(x,y) = x^a y^b\\)), los bienes se consideran independientes en sentido bruto. ¿Qué forma tiene la curva de Precio-Consumo ante variaciones de \\(P_x\\)?",
+            options: {
+                A: "Tiene pendiente positiva constante.",
+                B: "Tiene pendiente negativa.",
+                C: "Es completamente horizontal, indicando que el consumo del bien \\(Y\\) no varía ante cambios en \\(P_x\\).",
+                D: "Es completamente vertical."
+            },
+            correct: "C",
+            correctFeedback: "¡Perfecto! En una función Cobb-Douglas, el gasto en cada bien es una proporción constante del ingreso. Por lo tanto, cambios en \\(P_x\\) no afectan la cantidad consumida del bien \\(Y\\), haciendo que la curva Precio-Consumo sea una línea horizontal.",
+            incorrectFeedback: "Incorrecto. En el caso Cobb-Douglas, la demanda de \\(Y\\) es \\(Y = \\frac{b \\cdot M}{(a+b)P_y}\\), que es independiente de \\(P_x\\). Por ello, al cambiar \\(P_x\\), la cantidad de \\(Y\\) permanece constante, resultando en una curva Precio-Consumo horizontal."
+        },
+        {
+            question: "¿Qué propiedad geométrica de las curvas de indiferencia se asocia con el supuesto de Tasa Marginal de Sustitución en el Consumo (\\(TMSC\\)) decreciente (en valor absoluto)?",
+            options: {
+                A: "Curvas de indiferencia cóncavas respecto al origen.",
+                B: "Curvas de indiferencia con pendiente positiva.",
+                C: "Curvas de indiferencia que se cruzan entre sí.",
+                D: "Curvas de indiferencia strictly convexas respecto al origen."
+            },
+            correct: "D",
+            correctFeedback: "¡Exacto! Un mapa de curvas de indiferencia estrictamente convexas hacia el origen refleja que a medida que el consumidor sustituye el bien \\(Y\\) por el bien \\(X\\), está dispuesto a sacrificar cada vez menos unidades de \\(Y\\) para obtener una unidad adicional de \\(X\\).",
+            incorrectFeedback: "Incorrecto. Si fuesen cóncavas, la TMSC sería creciente. El supuesto estándar de curvas convexas implica que la TMSC es decreciente, reflejando la preferencia por la diversificación de canastas."
+        },
+        {
+            question: "Si el ingreso nominal del consumidor (\\(M\\)) se duplica, y los precios de ambos bienes (\\(P_x\\) y \\(P_y\\)) también se duplican, la recta de balance:",
+            options: {
+                A: "Se desplaza paralelamente hacia afuera alejándose del origen.",
+                B: "No experimenta ningún cambio (permanece exactamente en su posición original).",
+                C: "Modifica su pendiente haciéndose más inclinada.",
+                D: "Se desplaza paralelamente hacia el origen reduciendo el conjunto de consumo."
+            },
+            correct: "B",
+            correctFeedback: "¡Excelente! Este fenómeno refleja la 'homogeneidad de grado cero' de la restricción presupuestaria: si el ingreso y todos los precios cambian en la misma proporción, las posibilidades reales de consumo y el óptimo del consumidor no varían (ausencia de ilusión monetaria).",
+            incorrectFeedback: "Incorrecto. Al duplicarse tanto los precios como el ingreso, las razones de precios y los interceptos \\(\\frac{M}{P_x}\\) y \\(\\frac{M}{P_y}\\) permanecen constantes. Por ende, la restricción presupuestaria no se altera."
+        },
+        {
+            question: "Si dos bienes \\(X\\) e \\(Y\\) son sustitutos perfectos y el precio de \\(X\\) cae por debajo de la relación de utilidad relativa (\\(\\frac{P_x}{P_y} < TMSC\\)), ¿cuál será la elección del consumidor?",
+            options: {
+                A: "Una solución interior con tangencia clásica.",
+                B: "Seguirá consumiendo únicamente el bien \\(Y\\).",
+                C: "Una solución de esquina, donde gastará todo su presupuesto únicamente en el bien \\(X\\).",
+                D: "Repartirá su ingreso equitativamente entre ambos bienes."
+            },
+            correct: "C",
+            correctFeedback: "¡Muy bien! Para sustitutos perfectos, si el precio relativo de un bien es menor que la tasa a la que se está dispuesto a sustituirlos, el consumidor racional se especializará totalmente en el bien más barato relativamente (solución de esquina).",
+            incorrectFeedback: "Incorrecto. Las curvas de indiferencia de sustitutos perfectos son rectas. No hay punto de tangencia interior único. El consumidor se especializará en el bien que le rinda mayor utilidad por cada peso gastado, en este caso \\(X\\)."
+        },
+        {
+            question: "¿Cuál es el comportamiento de los efectos sustitución e ingreso ante una caída del precio del bien \\(X\\) (\\(P_x\\)) cuando este es un bien Giffen?",
+            options: {
+                A: "El Efecto Sustitución actúa aumentando el consumo de \\(X\\), pero el Efecto Ingreso es negativo y de mayor magnitud, reduciendo el consumo total de \\(X\\) (conduciendo a una caída de la cantidad demandada total).",
+                B: "Ambos efectos actúan disminuyendo el consumo de \\(X\\).",
+                C: "El Efecto Sustitución reduce el consumo de \\(X\\) y el Efecto Ingreso lo aumenta con mayor fuerza.",
+                D: "El Efecto Sustitución es nulo y el Efecto Ingreso determina un aumento de la cantidad consumida."
+            },
+            correct: "A",
+            correctFeedback: "¡Correcto! En un bien Giffen, el Efecto Ingreso negativo supera al Efecto Sustitución, haciendo que una caída en el precio resulte en una menor cantidad demandada total (violación de la ley de la demanda).",
+            incorrectFeedback: "Incorrecto. El Efecto Sustitución de Hicks siempre opera en sentido inverso al precio (si baja \\(P_x\\), el ES tiende a aumentar el consumo de \\(X\\)). Es el Efecto Ingreso negativo el que actúa en sentido contrario y con mayor intensidad, reduciendo el consumo total."
+        },
+        {
+            question: "¿Cómo se identifica que un bien es un bien inferior a través de su curva de Engel?",
+            options: {
+                A: "La curva de Engel es una línea horizontal perfectamente elástica.",
+                B: "La curva de Engel tiene pendiente positiva.",
+                C: "La curva de Engel nace desde el origen y tiene un ángulo de 45 grados.",
+                D: "La curva de Engel presenta pendiente negativa para los niveles de ingreso correspondientes."
+            },
+            correct: "D",
+            correctFeedback: "¡Perfecto! Un bien inferior es aquel cuyo consumo disminuye a medida que aumenta el ingreso del consumidor. Por lo tanto, la curva de Engel (que relaciona ingreso y cantidad consumida) tendrá pendiente negativa.",
+            incorrectFeedback: "Incorrecto. Una curva de Engel con pendiente positiva indica que el bien es normal. Para un bien inferior, el incremento de ingresos permite sustituir este bien por otros de mejor calidad, haciendo caer su consumo, lo que se traduce en una pendiente negativa."
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let correctAnswers = 0;
+    let incorrectAnswers = 0;
+
+    const quizFlowEl = document.getElementById('quiz-flow');
+    const questionTextEl = document.getElementById('question-text');
+    const optionsContainerEl = document.getElementById('options-container');
+    const quizCardEl = document.getElementById('quiz-card');
+    const cardBackEl = document.getElementById('card-back');
+    const resultTitleEl = document.getElementById('result-title');
+    const feedbackTextEl = document.getElementById('feedback-text');
+    const nextBtn = document.getElementById('next-btn');
+    const progressFillEl = document.getElementById('progress-fill');
+    const questionCounterEl = document.getElementById('question-counter');
+    const scoreCounterEl = document.getElementById('score-counter');
+
+    const summaryScreenEl = document.getElementById('summary-screen');
+    const summaryScoreEl = document.getElementById('summary-score');
+    const summaryMessageEl = document.getElementById('summary-message');
+    const restartBtn = document.getElementById('restart-btn');
+
+    function loadQuestion() {
+        // Reiniciar clases de la tarjeta
+        quizCardEl.classList.remove('flipped');
+        cardBackEl.classList.remove('correct-border', 'incorrect-border');
+
+        const currentQuestion = quizData[currentQuestionIndex];
+        
+        // Actualizar textos e indicativos
+        questionCounterEl.textContent = `Pregunta ${currentQuestionIndex + 1} de ${quizData.length}`;
+        questionTextEl.innerHTML = currentQuestion.question;
+        
+        // Calcular porcentaje progreso
+        const progressPercentage = ((currentQuestionIndex) / quizData.length) * 100;
+        progressFillEl.style.width = `${progressPercentage === 0 ? 5 : progressPercentage}%`;
+
+        // Generar opciones de respuesta
+        optionsContainerEl.innerHTML = '';
+        Object.entries(currentQuestion.options).forEach(([key, value]) => {
+            const button = document.createElement('button');
+            button.className = 'option-btn';
+            button.innerHTML = `<strong>${key})</strong> ${value}`;
+            button.onclick = () => selectOption(key);
+            optionsContainerEl.appendChild(button);
+        });
+
+        // Forzar a MathJax a procesar el nuevo contenido cargado
+        if (window.MathJax) {
+            MathJax.typesetPromise();
+        }
+    }
+
+    function selectOption(selectedKey) {
+        const currentQuestion = quizData[currentQuestionIndex];
+        const isCorrect = selectedKey === currentQuestion.correct;
+
+        if (isCorrect) {
+            correctAnswers++;
+            resultTitleEl.textContent = "¡Correcto!";
+            resultTitleEl.className = "result-title correct";
+            cardBackEl.classList.add('correct-border');
+            feedbackTextEl.innerHTML = currentQuestion.correctFeedback;
+        } else {
+            incorrectAnswers++;
+            resultTitleEl.textContent = "Incorrecto";
+            resultTitleEl.className = "result-title incorrect";
+            cardBackEl.classList.add('incorrect-border');
+            feedbackTextEl.innerHTML = currentQuestion.incorrectFeedback;
+        }
+
+        // Actualizar estadísticas del marcador
+        scoreCounterEl.textContent = `Correctas: ${correctAnswers} | Incorrectas: ${incorrectAnswers}`;
+
+        // Girar la tarjeta para mostrar la devolución
+        quizCardEl.classList.add('flipped');
+
+        if (window.MathJax) {
+            MathJax.typesetPromise();
+        }
+    }
+
+    nextBtn.onclick = () => {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) {
+            loadQuestion();
+        } else {
+            showSummary();
+        }
+    };
+
+    function showSummary() {
+        quizFlowEl.classList.add('hidden');
+        summaryScreenEl.classList.remove('hidden');
+        summaryScoreEl.textContent = `${correctAnswers} / ${quizData.length}`;
+
+        const scorePercent = (correctAnswers / quizData.length) * 100;
+        if (scorePercent >= 90) {
+            summaryMessageEl.textContent = "¡Excelente desempeño! Tienes un dominio excepcional de los conceptos de la teoría del consumidor, Hicks, bienes Giffen y curvas de demanda.";
+        } else if (scorePercent >= 70) {
+            summaryMessageEl.textContent = "¡Buen trabajo! Tienes bases muy sólidas de la deducción de la demanda, aunque te sugerimos repasar aquellos efectos y signos donde fallaste.";
+        } else {
+            summaryMessageEl.textContent = "Te sugerimos repasar la bibliografía sobre la descomposición de Hicks y las pendientes de la curva de Precio-Consumo para mejorar tus resultados.";
+        }
+    }
+
+    restartBtn.onclick = () => {
+        currentQuestionIndex = 0;
+        correctAnswers = 0;
+        incorrectAnswers = 0;
+        scoreCounterEl.textContent = `Correctas: 0 | Incorrectas: 0`;
+        summaryScreenEl.classList.add('hidden');
+        quizFlowEl.classList.remove('hidden');
+        loadQuestion();
+    };
+
+    // Cargar la primera pregunta al inicio
+    loadQuestion();
+</script>
+
+</body>
+</html>

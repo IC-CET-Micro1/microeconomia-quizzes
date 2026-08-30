@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tablero Microeconómico - Parte I</title>
+    <style>
+        :root {
+            --azul-oscuro: #002855;
+            --azul-medio: #00509d;
+            --celeste-claro: #e3f2fd;
+            --celeste-medio: #90caf9;
+            --verde: #2ecc71;
+            --rojo: #e74c3c;
+            --blanco: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f4f7f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            color: var(--azul-oscuro);
+            margin-bottom: 30px;
+        }
+
+        #login-screen {
+            background: var(--blanco);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        input[type="text"] {
+            padding: 12px;
+            width: 250px;
+            border: 2px solid var(--celeste-medio);
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .btn-main {
+            background: var(--azul-medio);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        .btn-main:hover { background: var(--azul-oscuro); }
+
+        /* Contenedor de Grilla */
+        #quiz-board {
+            display: none;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        /* Estilo de la Ficha */
+        .ficha {
+            height: 450px;
+            perspective: 1000px;
+        }
+
+        .ficha-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+
+        .ficha.flipped .ficha-inner {
+            transform: rotateY(180deg);
+        }
+
+        .ficha-front, .ficha-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            padding: 25px;
+            box-sizing: border-box;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ficha-front {
+            background: var(--blanco);
+            border-bottom: 5px solid var(--azul-medio);
+        }
+
+        .ficha-back {
+            background: var(--azul-oscuro);
+            color: white;
+            transform: rotateY(180deg);
+            justify-content: center;
+            text-align: center;
+        }
+
+        .opciones-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+        }
+
+        .opcion-item {
+            background: var(--celeste-claro);
+            margin: 8px 0;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            border: 1px solid transparent;
+            transition: 0.2s;
+        }
+
+        .opcion-item:hover {
+            border-color: var(--azul-medio);
+            background: #d1e9ff;
+        }
+
+        .opcion-item.selected-correct { background: var(--verde) !important; color: white; }
+        .opcion-item.selected-wrong { background: var(--rojo) !important; color: white; }
+
+        .feedback-icon { font-size: 40px; margin-bottom: 10px; }
+        .sintesis-box {
+            font-size: 12px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            margin-top: 15px;
+            border-radius: 5px;
+        }
+
+        /* Resultados */
+        #results-area {
+            display: none;
+            margin-top: 40px;
+            padding: 30px;
+            background: var(--blanco);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .final-btn-container {
+            margin: 30px 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>PARTE I: Introducción a la Teoría Microeconómica</h1>
+        <p>Haz clic en las opciones para responder y gira la ficha para ver la explicación.</p>
+    </header>
+
+    <div id="login-screen">
+        <h2>Bienvenido al Tablero de Autoevaluación</h2>
+        <input type="text" id="username" placeholder="Ingresa tu nombre">
+        <br>
+        <button class="btn-main" onclick="startApp()">Entrar al Tablero</button>
+    </div>
+
+    <div id="quiz-board"></div>
+
+    <div class="final-btn-container" id="finish-btn-wrapper">
+        <button class="btn-main" style="background: var(--verde);" onclick="calculateResults()">Ver Calificación Final</button>
+    </div>
+
+    <div id="results-area">
+        <h2 id="res-nombre"></h2>
+        <div id="res-stats" style="font-size: 22px; margin: 20px 0;"></div>
+        <div id="res-grade" style="font-weight: bold; font-size: 28px;"></div>
+        <br>
+        <button class="btn-main" onclick="location.reload()">Reiniciar Todo</button>
+    </div>
+
+    <script>
+        const database = [
+            {
+                q: "¿Cuál es la razón fundamental por la cual la escasez se considera el catalizador inevitable de la elección?",
+                options: [
+                    {txt: "A) Imposibilidad de satisfacer deseos ilimitados con recursos finitos.", correct: true, feedback: "La escasez es la tensión entre necesidades ilimitadas y medios finitos."},
+                    {txt: "B) El costo contable supera la capacidad de financiamiento.", correct: false, feedback: "Error común: confunde costo económico con registros contables."},
+                    {txt: "C) Es un fenómeno meramente descriptivo de recursos naturales.", correct: false, feedback: "La escasez no es solo un dato ecológico, es el motor de la elección."},
+                    {txt: "D) El gobierno restringe el acceso para control de liquidez.", correct: false, feedback: "Confunde medida política con principio económico universal."}
+                ],
+                sintesis: "Toda elección conlleva una renuncia (costo de oportunidad)."
+            },
+            {
+                q: "¿Cuál describe mejor el núcleo del 'problema económico'?",
+                options: [
+                    {txt: "A) Dificultad para eliminar dependencia de factores mediante tecnología.", correct: false, feedback: "La tecnología no elimina la finitud de los recursos."},
+                    {txt: "B) Dependencia de exportación de materias primas.", correct: false, feedback: "Es una circunstancia de desarrollo, no el núcleo del problema."},
+                    {txt: "C) Tensión entre necesidades ilimitadas y recursos finitos.", correct: true, feedback: "Este contraste obliga a resolver qué, cómo y para quién producir."},
+                    {txt: "D) Ausencia de marcos para distribución equitativa.", correct: false, feedback: "Desafío social, pero el problema base es la escasez."}
+                ],
+                sintesis: "La economía estudia cómo se resuelven estas interrogantes sistémicas."
+            },
+            {
+                q: "Enfoque de microeconomía positiva ante nuevos impuestos:",
+                options: [
+                    {txt: "A) Proponer receta mágica de recaudación sin desincentivos.", correct: false, feedback: "La economía no ofrece fórmulas mágicas ni recetas."},
+                    {txt: "B) Predicciones condicionales sobre variación del consumo sin juicios de valor.", correct: true, feedback: "La microeconomía positiva explica lo que 'es'."},
+                    {txt: "C) Argumentar deber moral de absorción del impuesto.", correct: false, feedback: "Esto pertenece al ámbito normativo (deber ser)."},
+                    {txt: "D) Declarar política buena o mala por ideología.", correct: false, feedback: "Los juicios ideológicos son subjetivos."}
+                ],
+                sintesis: "El análisis positivo predice comportamientos de manera objetiva."
+            },
+            {
+                q: "¿Objeto de estudio primordial de la microeconomía (Miller/Meiners)?",
+                options: [
+                    {txt: "A) Comportamiento de unidades individuales y asignación en mercados particulares.", correct: true, feedback: "Se ocupa de decisiones de familias, empresas y eficiencia local."},
+                    {txt: "B) Comportamiento global del sistema y consumo nacional.", correct: false, feedback: "Eso es objeto de estudio de la macroeconomía."},
+                    {txt: "C) Medición de inflación y desempleo nacional.", correct: false, feedback: "Son indicadores macroeconómicos agregados."},
+                    {txt: "D) Análisis del crecimiento del PIB.", correct: false, feedback: "Variable agregada propia de la macroeconomía."}
+                ],
+                sintesis: "Fundamental identificar a los agentes individuales de decisión."
+            },
+            {
+                q: "¿Objetivos que motivan a familias y empresas?",
+                options: [
+                    {txt: "A) Familias minimizan consumo y empresas maximizan costos.", correct: false, feedback: "Contradice la lógica de optimización racional."},
+                    {txt: "B) Familias maximizan utilidad y empresas buscan eficiencia.", correct: true, feedback: "Supuesto de comportamiento racional y optimización."},
+                    {txt: "C) Actúan por responsabilidad social dictada por el Estado.", correct: false, feedback: "Visión incompleta; la eficiencia es el motor primario."},
+                    {txt: "D) Acumulación de activos para evitar sistema de precios.", correct: false, feedback: "Los agentes usan los precios para decidir."}
+                ],
+                sintesis: "La interacción de objetivos coordina la actividad productiva."
+            },
+            {
+                q: "¿Qué actividades pertenecen al sector primario?",
+                options: [
+                    {txt: "A) Manufactura industrial y transformación.", correct: false, feedback: "Corresponde al sector secundario."},
+                    {txt: "B) Servicios bancarios, educativos y salud.", correct: false, feedback: "Corresponde al sector terciario."},
+                    {txt: "C) Pesca y minería.", correct: true, feedback: "Abarca extracción y aprovechamiento directo de recursos."},
+                    {txt: "D) Comercio minorista y TICs.", correct: false, feedback: "Son actividades del sector terciario."}
+                ],
+                sintesis: "La producción primaria se coordina vía el sistema de precios."
+            },
+            {
+                q: "¿Función estratégica de los precios en libre mercado?",
+                options: [
+                    {txt: "A) Etiquetas de costo contable histórico.", correct: false, feedback: "Ignora la función dinámica del precio como señal."},
+                    {txt: "B) Señales para transmisión de información y coordinación.", correct: true, feedback: "Transmiten valoración y costos permitiendo coordinación."},
+                    {txt: "C) Herramientas de control estatal de fluctuación.", correct: false, feedback: "Describe precios controlados, no mercado libre."},
+                    {txt: "D) Valores fijos determinados por sector primario.", correct: false, feedback: "Niega la flexibilidad del mercado."}
+                ],
+                sintesis: "Los precios permiten coordinación sin dirección central."
+            },
+            {
+                q: "¿Qué precio identifica la escasez comparativa?",
+                options: [
+                    {txt: "A) Precio absoluto (valor nominal).", correct: false, feedback: "Puede subir por inflación sin alterar escasez relativa."},
+                    {txt: "B) Precio relativo (valor en términos de otro bien).", correct: true, feedback: "Permiten saber si un bien se encareció respecto a otros."},
+                    {txt: "C) Precio histórico (costo contable).", correct: false, feedback: "Mirada al pasado que no refleja escasez actual."},
+                    {txt: "D) Precio de equilibrio nacional macro.", correct: false, feedback: "La micro se enfoca en mercados específicos."}
+                ],
+                sintesis: "Los precios relativos orientan sustituciones eficientes."
+            },
+            {
+                q: "Diferencia entre planificación central y sistema mixto:",
+                options: [
+                    {txt: "A) En central la propiedad es privada y el Estado corrige fallas.", correct: false, feedback: "Eso describe un sistema mixto."},
+                    {txt: "B) En central el Estado posee recursos y decide qué producir.", correct: true, feedback: "Se define por propiedad estatal y dirección centralizada."},
+                    {txt: "C) En central el precio de mercado es el único mecanismo.", correct: false, feedback: "Eso describe un mercado libre puro."},
+                    {txt: "D) Decisiones tomadas por cooperativas internacionales.", correct: false, feedback: "No corresponde a definiciones técnicas estándar."}
+                ],
+                sintesis: "La planificación central sustituye al mecanismo de mercado."
+            },
+            {
+                q: "Justificación de intervención en 'lujo vs. leche':",
+                options: [
+                    {txt: "A) Ineficiencia técnica insuperable en sector primario.", correct: false, feedback: "Confunde ineficiencia técnica con distributiva."},
+                    {txt: "B) Premisa de eficiencia total del mercado.", correct: false, feedback: "El mercado puede ser eficiente pero socialmente inaceptable."},
+                    {txt: "C) Presencia de falla de equidad.", correct: true, feedback: "El mercado asigna por poder de compra, no por necesidad social."},
+                    {txt: "D) Eliminar propiedad privada en servicios.", correct: false, feedback: "Medida no justificada solo por equidad de un bien."}
+                ],
+                sintesis: "La intervención busca resultados socialmente aceptables."
+            }
+        ];
+
+        let correctCount = 0;
+        let answeredCount = 0;
+
+        function startApp() {
+            const user = document.getElementById('username').value;
+            if(!user) return alert("Ingresa tu nombre");
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('quiz-board').style.display = 'grid';
+            renderCards();
+        }
+
+        function renderCards() {
+            const board = document.getElementById('quiz-board');
+            database.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'ficha';
+                card.id = `card-${index}`;
+                card.innerHTML = `
+                    <div class="ficha-inner">
+                        <div class="ficha-front">
+                            <strong style="color:var(--azul-medio)">Pregunta ${index + 1}</strong>
+                            <p style="font-size:15px; flex-grow:1">${item.q}</p>
+                            <ul class="opciones-list">
+                                ${item.options.map((opt, i) => `
+                                    <li class="opcion-item" onclick="selectOption(event, ${index}, ${i})">${opt.txt}</li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        <div class="ficha-back" id="back-${index}">
+                            </div>
+                    </div>
+                `;
+                board.appendChild(card);
+            });
+        }
+
+        function selectOption(event, questionIdx, optionIdx) {
+            event.stopPropagation();
+            const cardElement = document.getElementById(`card-${questionIdx}`);
+            if(cardElement.classList.contains('responded')) return;
+
+            const selectedOption = database[questionIdx].options[optionIdx];
+            const back = document.getElementById(`back-${questionIdx}`);
+            
+            cardElement.classList.add('responded');
+            answeredCount++;
+
+            if(selectedOption.correct) {
+                correctCount++;
+                event.target.classList.add('selected-correct');
+                back.innerHTML = `<div class="feedback-icon">✔️</div><h3>¡Correcto!</h3><p>${selectedOption.feedback}</p>`;
+                back.style.border = "5px solid var(--verde)";
+            } else {
+                event.target.classList.add('selected-wrong');
+                back.innerHTML = `<div class="feedback-icon">❌</div><h3>Incorrecto</h3><p>${selectedOption.feedback}</p>`;
+                back.style.border = "5px solid var(--rojo)";
+            }
+
+            back.innerHTML += `<div class="sintesis-box"><strong>Síntesis:</strong> ${database[questionIdx].sintesis}</div>`;
+            
+            // Girar ficha
+            setTimeout(() => cardElement.classList.add('flipped'), 300);
+
+            // Mostrar botón final si terminó todas
+            if(answeredCount === database.length) {
+                document.getElementById('finish-btn-wrapper').style.display = 'block';
+            }
+        }
+
+        function calculateResults() {
+            document.getElementById('quiz-board').style.display = 'none';
+            document.getElementById('finish-btn-wrapper').style.display = 'none';
+            const resultsArea = document.getElementById('results-area');
+            resultsArea.style.display = 'block';
+
+            const nombre = document.getElementById('username').value;
+            const porcentaje = (correctCount / database.length) * 10;
+
+            document.getElementById('res-nombre').innerText = `Resultado de ${nombre}`;
+            document.getElementById('res-stats').innerHTML = `Correctas: ${correctCount} | Incorrectas: ${database.length - correctCount}`;
+            
+            const gradeDiv = document.getElementById('res-grade');
+            gradeDiv.innerText = `Nota: ${porcentaje.toFixed(1)} / 10`;
+            
+            if(porcentaje >= 8) {
+                gradeDiv.style.color = "var(--verde)";
+                gradeDiv.innerHTML += "<br><small>¡APROBADO!</small>";
+            } else {
+                gradeDiv.style.color = "var(--rojo)";
+                gradeDiv.innerHTML += "<br><small>DESAPROBADO</small>";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,582 @@
+"""<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autoevaluación de Conocimientos de la Unidad 1 Microeconomía</title>
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --text-color: #333;
+            --card-bg: #fff;
+            --primary: #4a90e2;
+            --primary-hover: #357abd;
+            --correct: #2ecc71;
+            --incorrect: #e74c3c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 24px;
+            max-width: 800px;
+        }
+
+        .progress {
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 18px;
+            color: #7f8c8d;
+        }
+
+        /* Contenedor de la Tarjeta */
+        .card-container {
+            perspective: 1000px;
+            width: 100%;
+            max-width: 700px;
+            min-height: 450px;
+            margin-bottom: 30px;
+            display: block; /* Oculto inicialmente por JS, pero por defecto block */
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 450px;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .card-container.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            min-height: 450px;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-front {
+            background-color: var(--card-bg);
+            border: 2px solid #e1e8ed;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            color: white;
+        }
+
+        .card-back.correct-bg {
+            background-color: var(--correct);
+        }
+
+        .card-back.incorrect-bg {
+            background-color: var(--incorrect);
+        }
+
+        .question-text {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            line-height: 1.4;
+            color: #2c3e50;
+        }
+
+        .options {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background-color: #f8f9fa;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            padding: 15px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            color: var(--text-color);
+        }
+
+        .option-btn:hover {
+            background-color: #eef2f5;
+            border-color: #bdc3c7;
+            transform: translateY(-2px);
+        }
+
+        .result-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .explanation {
+            font-size: 18px;
+            line-height: 1.5;
+            margin-bottom: 30px;
+        }
+
+        .next-btn {
+            background-color: white;
+            color: #333;
+            border: none;
+            padding: 12px 30px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background-color 0.2s;
+        }
+
+        .next-btn:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* Dashboard */
+        #dashboard {
+            display: none;
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .score-summary {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .score-summary h2 {
+            font-size: 32px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .score-summary p {
+            font-size: 20px;
+            color: #7f8c8d;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .grid-item {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 60px;
+            border-radius: 10px;
+            font-weight: bold;
+            color: white;
+            font-size: 18px;
+        }
+
+        .grid-item.correct { background-color: var(--correct); }
+        .grid-item.incorrect { background-color: var(--incorrect); }
+        
+        .restart-btn {
+            display: block;
+            margin: 0 auto;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .restart-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        @media (max-width: 600px) {
+            .question-text { font-size: 18px; }
+            .option-btn { font-size: 14px; padding: 12px; }
+            .card-front, .card-back { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Autoevaluación de Conocimientos de la Unidad 1 Microeconomía</h1>
+    <div id="progress" class="progress">Pregunta 1 de 30</div>
+
+    <div id="quiz-container" class="card-container">
+        <div class="card-inner" id="card-inner">
+            <!-- Cara Delantera (Pregunta) -->
+            <div class="card-front">
+                <div class="question-text" id="question">Cargando pregunta...</div>
+                <div class="options" id="options">
+                    <!-- Botones de opciones generados por JS -->
+                </div>
+            </div>
+            
+            <!-- Cara Trasera (Respuesta y Explicación) -->
+            <div class="card-back" id="card-back">
+                <div class="result-title" id="result-title">¡Correcto!</div>
+                <div class="explanation" id="explanation">Explicación aquí.</div>
+                <button class="next-btn" onclick="nextQuestion()">Siguiente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard de Resultados -->
+    <div id="dashboard">
+        <div class="score-summary">
+            <h2>Resultados Finales</h2>
+            <p id="score-text">Obtuviste X de 30 (Y%)</p>
+            <p id="grade-text" style="margin-top:10px; font-weight:bold;"></p>
+        </div>
+        <div class="grid" id="dashboard-grid">
+            <!-- Cuadros de resultados generados por JS -->
+        </div>
+        <button class="restart-btn" onclick="restartQuiz()">Volver a intentar</button>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                q: "1. ¿Cuál es el concepto fundamental que da nacimiento a la ciencia económica?",
+                options: ["a) El crecimiento poblacional.", "b) La escasez de recursos frente a necesidades ilimitadas.", "c) La abundancia de materias primas.", "d) La intervención del Estado en los precios."],
+                correct: 1,
+                exp: "La economía surge por el problema de la escasez: los recursos son limitados para satisfacer necesidades humanas virtualmente ilimitadas."
+            },
+            {
+                q: "2. La microeconomía se define principalmente como el estudio de:",
+                options: ["a) Los grandes agregados económicos como la inflación y el desempleo.", "b) El comportamiento de unidades individuales como consumidores, empresas e inversores.", "c) La política fiscal de un país.", "d) El crecimiento del Producto Interno Bruto (PIB)."],
+                correct: 1,
+                exp: "La microeconomía se enfoca en las decisiones de los agentes individuales (hogares y empresas) y su interacción en los mercados."
+            },
+            {
+                q: "3. El análisis económico que se ocupa de las explicaciones científicas y las relaciones de causa y efecto ('lo que es') se denomina:",
+                options: ["a) Economía normativa.", "b) Economía política.", "c) Economía positiva.", "d) Juicio de valor."],
+                correct: 2,
+                exp: "La economía positiva analiza los hechos económicos de forma objetiva ('lo que es'), basándose en datos y relaciones de causa-efecto."
+            },
+            {
+                q: "4. ¿Cuál de las siguientes afirmaciones es de carácter normativo?",
+                options: ["a) Un aumento del precio de la gasolina reduce su consumo.", "b) El gobierno debería aumentar el salario mínimo para mejorar la equidad.", "c) La escasez de trigo eleva el precio del pan.", "d) Las empresas maximizan beneficios donde el ingreso marginal iguala al costo marginal."],
+                correct: 1,
+                exp: "Las afirmaciones normativas implican juicios de valor o prescripciones sobre cómo 'deberían ser' las cosas."
+            },
+            {
+                q: "5. El precio de un bien expresado únicamente en unidades monetarias (dinero) se conoce como:",
+                options: ["a) Precio relativo.", "b) Precio real.", "c) Precio absoluto o nominal.", "d) Precio de equilibrio."],
+                correct: 2,
+                exp: "El precio absoluto o nominal es simplemente la cantidad de dinero corriente que se debe pagar por una unidad de un bien."
+            },
+            {
+                q: "6. ¿Qué es un precio relativo?",
+                options: ["a) El precio de un bien ajustado por la inflación histórica.", "b) El precio de un bien en relación con el precio de otro bien.", "c) El precio fijado por el comité de planificación central.", "d) El costo de las materias primas utilizadas."],
+                correct: 1,
+                exp: "Un precio relativo expresa el valor de un bien en términos de otro, mostrando la relación de intercambio entre ambos."
+            },
+            {
+                q: "7. En microeconomía, las decisiones de los agentes económicos se basan principalmente en:",
+                options: ["a) Los precios absolutos únicamente.", "b) La tasa de inflación anual.", "c) Los precios relativos.", "d) Los deseos del gobierno."],
+                correct: 2,
+                exp: "Los agentes toman decisiones en base a los precios relativos, ya que estos reflejan los verdaderos costos de oportunidad en el mercado."
+            },
+            {
+                q: "8. Si el precio del café sube un 10% y el precio del té sube un 10%, el precio relativo entre ambos:",
+                options: ["a) Aumenta a favor del café.", "b) Disminuye a favor del té.", "c) Se mantiene constante.", "d) Provoca un cambio inmediato en la preferencia del consumidor."],
+                correct: 2,
+                exp: "Si ambos precios aumentan exactamente en la misma proporción, la relación de intercambio entre ambos bienes no varía."
+            },
+            {
+                q: "9. En una economía de mercado, los precios actúan como:",
+                options: ["a) Obstáculos para el consumo.", "b) Señales que transmiten información sobre la escasez y los deseos.", "c) Órdenes directas del Estado.", "d) Mecanismos para eliminar la competencia."],
+                correct: 1,
+                exp: "Los precios funcionan como un sistema de señales descentralizado que indica qué bienes son escasos y guía las decisiones de productores y consumidores."
+            },
+            {
+                q: "10. El interrogante económico '¿Qué producir?' se refiere a:",
+                options: ["a) La elección de las técnicas y tecnologías de producción.", "b) La distribución del producto social entre los habitantes.", "c) La determinación de los bienes y servicios a elaborar y sus cantidades.", "d) La asignación de salarios a los trabajadores."],
+                correct: 2,
+                exp: "Consiste en decidir cuáles de todos los bienes y servicios posibles se van a fabricar y en qué cantidad, priorizando necesidades."
+            },
+            {
+                q: "11. El interrogante económico '¿Cómo producir?' se relaciona con:",
+                options: ["a) Quién consumirá los bienes finales.", "b) La selección de métodos, recursos y combinaciones técnicas.", "c) La cantidad de dinero en circulación.", "d) La demanda de los consumidores."],
+                correct: 1,
+                exp: "Se centra en elegir la combinación tecnológica y productiva más eficiente (insumos, maquinaria, mano de obra) para fabricar los bienes."
+            },
+            {
+                q: "12. El interrogante '¿Para quién producir?' se resuelve mediante:",
+                options: ["a) El sistema de distribución de la producción entre los miembros de la sociedad.", "b) La elección de maquinaria más moderna.", "c) La publicidad de las empresas.", "d) El cálculo de los costos fijos."],
+                correct: 0,
+                exp: "Trata sobre cómo se reparte o distribuye la producción total de la economía entre los individuos que conforman la sociedad."
+            },
+            {
+                q: "13. ¿Quiénes son los dueños de los factores de la producción (trabajo, tierra, capital) en el flujo circular de la economía?",
+                options: ["a) Las empresas.", "b) El Gobierno.", "c) Las familias (consumidores).", "d) Los bancos."],
+                correct: 2,
+                exp: "En el modelo del flujo circular, las familias son las propietarias de los factores productivos y los ofrecen a las empresas a cambio de ingresos."
+            },
+            {
+                q: "14. ¿Cuál es el objetivo primordial que la teoría económica supone para las empresas?",
+                options: ["a) Maximizar el bienestar social.", "b) Maximizar sus beneficios totales.", "c) Minimizar la cantidad de trabajadores.", "d) Pagar la mayor cantidad de impuestos."],
+                correct: 1,
+                exp: "El supuesto neoclásico básico es que las empresas toman decisiones buscando maximizar la diferencia entre sus ingresos y sus costos (beneficios)."
+            },
+            {
+                q: "15. ¿En qué mercado las familias actúan como oferentes y las empresas como demandantes?",
+                options: ["a) Mercado de productos.", "b) Mercado de bienes y servicios.", "c) Mercado de factores de producción (insumos).", "d) Mercado de consumo masivo."],
+                correct: 2,
+                exp: "En el mercado de factores, las familias ofrecen su trabajo, tierra y capital, mientras que las empresas los demandan (compran/alquilan) para producir."
+            },
+            {
+                q: "16. Un sistema económico donde el Estado toma todas las decisiones sobre qué y cómo producir, y no existe la propiedad privada, se llama:",
+                options: ["a) Economía de libre mercado.", "b) Economía mixta.", "c) Economía de planificación centralizada.", "d) Capitalismo."],
+                correct: 2,
+                exp: "En una economía centralizada o de mando, la autoridad estatal planifica la producción, distribución y posee los medios de producción."
+            },
+            {
+                q: "17. El 'Costo de Oportunidad' se define como:",
+                options: ["a) El precio total pagado por un producto en el mercado.", "b) El valor de la mejor alternativa sacrificada al realizar una elección.", "c) El costo de las materias primas más los salarios.", "d) La suma de los costos fijos y variables."],
+                correct: 1,
+                exp: "Es el sacrificio económico real; aquello a lo que renunciamos (la mejor opción alternativa) por tomar una decisión determinada."
+            },
+            {
+                q: "18. Aquellos bienes que existen en cantidades suficientes para satisfacer todas las necesidades y se pueden disponer libremente de ellos se denominan:",
+                options: ["a) Bienes económicos.", "b) Bienes de lujo.", "c) Bienes libres.", "d) Bienes inferiores."],
+                correct: 2,
+                exp: "Los bienes libres (como el aire) son superabundantes, no requieren racionamiento y por ende no tienen precio de mercado."
+            },
+            {
+                q: "19. ¿Cuándo un bien libre puede convertirse en un bien económico?",
+                options: ["a) Cuando el gobierno lo declara gratuito por ley.", "b) Cuando se vuelve escaso en relación con las necesidades humanas.", "c) Cuando su precio absoluto es igual a cero.", "d) Cuando todos los consumidores tienen acceso a él."],
+                correct: 1,
+                exp: "Si un recurso previamente abundante (ej. agua pura) se torna limitado frente a los deseos de las personas, pasa a ser un bien económico sujeto a precio."
+            },
+            {
+                q: "20. La característica esencial de los bienes económicos es su:",
+                options: ["a) Abundancia.", "b) Escasez relativa.", "c) Utilidad nula.", "d) Falta de precio."],
+                correct: 1,
+                exp: "La escasez relativa (hay menos cantidad de la que la gente desearía si fuera gratis) es lo que les da valor económico y justifica su estudio."
+            },
+            {
+                q: "21. El 'Individualismo Metodológico' en microeconomía significa que:",
+                options: ["a) El Estado es la unidad básica de análisis.", "b) El comportamiento de los grupos se deduce del comportamiento de los individuos.", "c) Las empresas no deben competir entre sí.", "d) Cada persona produce sus propios bienes."],
+                correct: 1,
+                exp: "Este principio metodológico establece que todos los fenómenos económicos y sociales deben explicarse a partir de las decisiones individuales."
+            },
+            {
+                q: "22. En una economía de mercado, si el precio de un bien sube, los productores generalmente:",
+                options: ["a) Tienen un incentivo para producir menos.", "b) Tienen un incentivo para producir más de ese bien.", "c) Cierran la empresa inmediatamente.", "d) Esperan a que el gobierno fije un precio máximo."],
+                correct: 1,
+                exp: "Según la ley de la oferta, precios más altos ofrecen mayor rentabilidad, incentivando a los productores a aumentar la cantidad ofrecida."
+            },
+            {
+                q: "23. El sector de la actividad económica que incluye la industria y las manufacturas es el:",
+                options: ["a) Sector primario.", "b) Sector secundario.", "c) Sector terciario.", "d) Sector de factores."],
+                correct: 1,
+                exp: "El sector secundario abarca todas las actividades que transforman las materias primas en productos manufacturados (industria y construcción)."
+            },
+            {
+                q: "24. ¿Qué sucede con la recta presupuestaria si el ingreso del consumidor aumenta, manteniendo los precios constantes?",
+                options: ["a) Cambia su pendiente.", "b) Se desplaza paralelamente hacia afuera (derecha).", "c) Se desplaza paralelamente hacia el origen (izquierda).", "d) Se vuelve vertical."],
+                correct: 1,
+                exp: "Al tener un mayor ingreso nominal sin que varíen los precios, el poder adquisitivo se expande, desplazando la recta paralelamente hacia la derecha."
+            },
+            {
+                q: "25. La escasez es un fenómeno que afecta a:",
+                options: ["a) Solo a los países subdesarrollados.", "b) Solo a las familias pobres.", "c) A todas las sociedades modernas, independientemente de su política.", "d) Únicamente a las empresas que tienen pérdidas."],
+                correct: 2,
+                exp: "La escasez es una condición universal. Todas las sociedades enfrentan límites en sus recursos (tiempo, trabajo, capital) frente a necesidades ilimitadas."
+            },
+            {
+                q: "26. Los modelos económicos se utilizan para:",
+                options: ["a) Representar la realidad de forma exacta sin omitir ningún detalle.", "b) Simplificar la realidad para explicar y predecir comportamientos.", "c) Eliminar la necesidad de usar precios.", "d) Garantizar que no haya pobreza."],
+                correct: 1,
+                exp: "Los modelos son representaciones simplificadas que omiten detalles no esenciales para aislar y comprender las variables fundamentales de un fenómeno."
+            },
+            {
+                q: "27. Una economía mixta es aquella que:",
+                options: ["a) Solo tiene mercado de factores.", "b) Combina mecanismos de mercado con cierto grado de intervención estatal.", "c) Niega totalmente la propiedad privada.", "d) No utiliza dinero para los intercambios."],
+                correct: 1,
+                exp: "Casi todas las economías reales son mixtas: las decisiones las toman principalmente los mercados, pero el Estado interviene para corregir fallos o redistribuir."
+            },
+            {
+                q: "28. Las necesidades humanas se consideran generalmente como:",
+                options: ["a) Limitadas por la naturaleza.", "b) Virtualmente ilimitadas.", "c) Iguales para todos los individuos.", "d) Satisfechas en su totalidad por el sistema de precios."],
+                correct: 1,
+                exp: "La economía asume que las necesidades son insaciables; a medida que se satisfacen unas (básicas), surgen otras nuevas (secundarias o de lujo)."
+            },
+            {
+                q: "29. El sistema de precios ayuda a asignar recursos escasos hacia sus usos más valorados porque:",
+                options: ["a) Obliga a todos a pagar lo mismo.", "b) Permite que los agentes económicos coordinen sus decisiones de forma descentralizada.", "c) Elimina el costo de oportunidad.", "d) El gobierno decide qué precio es justo para cada persona."],
+                correct: 1,
+                exp: "Los precios comunican escasez y preferencias sin necesidad de una autoridad central, guiando los recursos hacia donde los consumidores más los valoran."
+            },
+            {
+                q: "30. El supuesto de 'ceteris paribus' permite a los economistas:",
+                options: ["a) Analizar todas las variables del mundo al mismo tiempo.", "b) Mantener constantes otros factores externos para analizar el efecto de una sola variable.", "c) Ignorar por completo la realidad.", "d) Predecir el futuro con un 100% de exactitud."],
+                correct: 1,
+                exp: "Es una locución latina que significa 'todo lo demás constante', clave para aislar la relación de causa y efecto entre dos variables específicas en un modelo."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let userAnswers = []; // Para almacenar si acertó (true) o falló (false) en cada pregunta
+
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const progressEl = document.getElementById('progress');
+        const cardContainer = document.getElementById('quiz-container');
+        const cardBack = document.getElementById('card-back');
+        const resultTitle = document.getElementById('result-title');
+        const explanationEl = document.getElementById('explanation');
+        const dashboard = document.getElementById('dashboard');
+
+        function loadQuestion() {
+            // Reset state
+            cardContainer.classList.remove('flipped');
+            cardBack.className = 'card-back'; // reset classes
+            
+            const qData = quizData[currentQuestion];
+            progressEl.innerText = `Pregunta ${currentQuestion + 1} de ${quizData.length}`;
+            questionEl.innerText = qData.q;
+            
+            optionsEl.innerHTML = '';
+            qData.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => selectOption(index);
+                optionsEl.appendChild(btn);
+            });
+        }
+
+        function selectOption(index) {
+            const qData = quizData[currentQuestion];
+            const isCorrect = (index === qData.correct);
+            
+            userAnswers[currentQuestion] = isCorrect;
+            
+            if (isCorrect) {
+                score++;
+                cardBack.classList.add('correct-bg');
+                resultTitle.innerText = '¡Correcto!';
+            } else {
+                cardBack.classList.add('incorrect-bg');
+                resultTitle.innerText = 'Incorrecto';
+            }
+            
+            // Set explanation
+            explanationEl.innerText = qData.exp;
+            
+            // Flip card
+            cardContainer.classList.add('flipped');
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < quizData.length) {
+                // Pequeño timeout para que gire la tarjeta antes de cambiar el contenido si es necesario
+                cardContainer.classList.remove('flipped');
+                setTimeout(() => {
+                    loadQuestion();
+                }, 400); // 400ms delay para esconder la transición inversa
+            } else {
+                showDashboard();
+            }
+        }
+
+        function showDashboard() {
+            cardContainer.style.display = 'none';
+            progressEl.style.display = 'none';
+            dashboard.style.display = 'block';
+            
+            const percentage = Math.round((score / quizData.length) * 100);
+            document.getElementById('score-text').innerText = `Obtuviste ${score} respuestas correctas de ${quizData.length} (${percentage}%)`;
+            
+            const gradeEl = document.getElementById('grade-text');
+            if(percentage >= 90) {
+                gradeEl.innerText = "¡Excelente nivel! Tienes los conceptos muy claros.";
+                gradeEl.style.color = "#2ecc71";
+            } else if(percentage >= 70) {
+                gradeEl.innerText = "¡Muy bien! Estás listo, pero repasa algunos detalles.";
+                gradeEl.style.color = "#f39c12";
+            } else if(percentage >= 50) {
+                gradeEl.innerText = "Regular. Es recomendable volver a leer la bibliografía.";
+                gradeEl.style.color = "#e67e22";
+            } else {
+                gradeEl.innerText = "Necesitas estudiar los conceptos fundamentales. ¡No te desanimes!";
+                gradeEl.style.color = "#e74c3c";
+            }
+
+            const grid = document.getElementById('dashboard-grid');
+            grid.innerHTML = '';
+            
+            userAnswers.forEach((isCorrect, index) => {
+                const box = document.createElement('div');
+                box.className = `grid-item ${isCorrect ? 'correct' : 'incorrect'}`;
+                box.innerText = index + 1;
+                grid.appendChild(box);
+            });
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            userAnswers = [];
+            dashboard.style.display = 'none';
+            cardContainer.style.display = 'block';
+            progressEl.style.display = 'block';
+            loadQuestion();
+        }
+
+        // Initialize first question
+        loadQuestion();
+    </script>
+</body>
+</html>
+"""
