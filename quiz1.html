@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Microeconomía - Teoría de la Producción de Corto Plazo</title>
+    <!-- Incluye MathJax para la renderización perfecta de fórmulas en LaTeX -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --background: #f3f4f6;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: 5px;
+            font-size: 1.8rem;
+        }
+
+        .progress-bar {
+            background-color: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            background-color: var(--primary-light);
+            height: 100%;
+            width: 5%;
+            transition: width 0.3s ease;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        /* 3D Flip Card Container */
+        .quiz-card-container {
+            perspective: 1000px;
+            width: 100%;
+            height: auto;
+            min-height: 480px;
+            margin-bottom: 20px;
+        }
+
+        .quiz-card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 480px;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-radius: 15px;
+        }
+
+        .quiz-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            background-color: var(--card-bg);
+            padding: 30px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            border: 3px solid var(--primary-light);
+        }
+
+        .card-back.correct-border {
+            border-color: var(--success);
+        }
+
+        .card-back.incorrect-border {
+            border-color: var(--danger);
+        }
+
+        .question-text {
+            font-size: 1.15rem;
+            font-weight: 600;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background-color: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px 15px;
+            text-align: left;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary-light);
+            background-color: #f0f7ff;
+        }
+
+        /* Back of the card elements */
+        .result-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .result-title.correct {
+            color: var(--success);
+        }
+
+        .result-title.incorrect {
+            color: var(--danger);
+        }
+
+        .feedback-text {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary-light);
+        }
+
+        .card-back.correct-border .feedback-text {
+            border-left-color: var(--success);
+        }
+
+        .card-back.incorrect-border .feedback-text {
+            border-left-color: var(--danger);
+        }
+
+        .next-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            align-self: center;
+            transition: background-color 0.2s;
+        }
+
+        .next-btn:hover {
+            background-color: var(--primary-light);
+        }
+
+        /* Results Screen */
+        .summary-screen {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .summary-score {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 20px 0;
+        }
+
+        .restart-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .restart-btn:hover {
+            background-color: var(--primary-light);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Quiz de Microeconomía</h1>
+        <p>Teoría de la Producción de Corto Plazo (Factor Trabajo Variable)</p>
+    </header>
+
+    <div id="quiz-flow">
+        <div class="stats">
+            <span id="question-counter">Pregunta 1 de 20</span>
+            <span id="score-counter">Correctas: 0 | Incorrectas: 0</span>
+        </div>
+
+        <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+        </div>
+
+        <div class="quiz-card-container">
+            <div id="quiz-card" class="quiz-card">
+                <!-- Frente de la Tarjeta (Pregunta) -->
+                <div class="card-face card-front">
+                    <div id="question-text" class="question-text">Cargando pregunta...</div>
+                    <div id="options-container" class="options-list">
+                        <!-- Las opciones se generarán dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Reverso de la Tarjeta (Respuesta / Devolución) -->
+                <div id="card-back" class="card-face card-back">
+                    <div>
+                        <div id="result-title" class="result-title">¡Correcto!</div>
+                        <div id="feedback-text" class="feedback-text">Retroalimentación...</div>
+                    </div>
+                    <button id="next-btn" class="next-btn">Siguiente Pregunta</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla de Resultados Finales -->
+    <div id="summary-screen" class="summary-screen hidden">
+        <h2>¡Has completado el Quiz de Producción!</h2>
+        <p>Tu puntuación final es:</p>
+        <div id="summary-score" class="summary-score">0 / 20</div>
+        <p id="summary-message">Mensaje de desempeño</p>
+        <button id="restart-btn" class="restart-btn">Reiniciar Quiz</button>
+    </div>
+</div>
+
+<script>
+    // Datos de las 20 preguntas con opciones distribuidas de forma perfectamente equilibrada (5 A, 5 B, 5 C, 5 D)
+    const quizData = [
+        {
+            question: "¿Cómo se define conceptualmente el Corto Plazo en la teoría de la producción de una firma?",
+            options: {
+                A: "Es un periodo de tiempo en el cual todos los factores de producción de la empresa son estrictamente variables.",
+                B: "Es aquel periodo de tiempo en el cual al menos uno de los factores de producción (generalmente el capital \\(K^0\\)) se mantiene fijo.",
+                C: "Es un periodo cronológico rígido y predeterminado menor a un año calendario.",
+                D: "Es la escala de operaciones mínima eficiente en donde no existen costos de tipo variable."
+            },
+            correct: "B",
+            correctFeedback: "¡Excelente! El corto plazo no es un periodo cronológico fijo, sino un concepto operativo que define la presencia de al menos un factor de producción fijo (capital, infraestructura) que no puede ser alterado de inmediato.",
+            incorrectFeedback: "Incorrecto. En microeconomía, el corto plazo se define operativamente por la existencia de factores fijos (típicamente el capital), mientras que a largo plazo todos los factores pasan a ser variables."
+        },
+        {
+            question: "¿Cuál es la definición matemática del Producto Marginal del Trabajo (\\(PMg_L\\)) ante incrementos en el factor variable?",
+            options: {
+                A: "Es la porción de capital neto que se puede asignar para maximizar la utilidad contable.",
+                B: "Es el cociente entre el salario nominal real de mercado y el costo de oportunidad del capital.",
+                C: "Es la producción promedio obtenida por cada unidad de factor contratado: \\(PMe_L = \\frac{Q}{L}\\).",
+                D: "Es el cambio en el producto total provocado por una variación unitaria en la cantidad de factor variable empleado: \\(PMg_L = \\frac{\\Delta Q}{\\Delta L}\\) o \\(\\frac{\\partial Q}{\\partial L}\\)."
+            },
+            correct: "D",
+            correctFeedback: "¡Perfecto! El producto marginal del trabajo mide el aporte adicional al producto total derivado de contratar un trabajador adicional (o una unidad más del factor variable L).",
+            incorrectFeedback: "Incorrecto. El producto marginal mide el aporte incremental a la producción total. La opción C define el producto medio (\\(PMe_L\\)). Por ende, la respuesta correcta es la opción D."
+        },
+        {
+            question: "¿Qué relación geométrica se verifica exactamente en el óptimo técnico de la empresa competitiva, donde el producto medio del trabajo (\\(PMe_L\\)) es máximo?",
+            options: {
+                A: "El producto marginal es negativo debido a la saturación de espacio.",
+                B: "El producto marginal del trabajo es igual al producto medio (\\(PMg_L = PMe_L\\)), intersecándolo en su punto más alto.",
+                C: "El producto total se encuentra en su punto de inflexión con aceleración nula.",
+                D: "El producto total de la firma es máximo y el producto marginal es cero."
+            },
+            correct: "B",
+            correctFeedback: "¡Correcto! Geométricamente, cuando el producto medio (\\(PMe_L\\)) alcanza su máximo (punto conocido como óptimo técnico), el producto marginal lo iguala (\\(PMg_L = PMe_L\\)) cortándolo desde arriba.",
+            incorrectFeedback: "Incorrecto. En el óptimo técnico, la productividad media del factor variable alcanza su máximo, y la regla matemática establece que en dicho extremo \\(PMg_L = PMe_L\\) (opción B)."
+        },
+        {
+            question: "Cuando el Producto Total (PT) de la empresa alcanza su nivel máximo absoluto (máximo técnico), el producto marginal de trabajo (\\(PMg_L\\)) es igual a:",
+            options: {
+                A: "El valor del producto medio de corto plazo.",
+                B: "Su valor máximo en el punto de inflexión.",
+                C: "Cero (\\(PMg_L = 0\\)), y a partir de allí se vuelve negativo.",
+                D: "El cociente de salarios y el costo de capital de la firma."
+            },
+            correct: "C",
+            correctFeedback: "¡Muy bien! Cuando la producción total alcanza su límite físico absoluto, la adición de una unidad más de trabajo no añade nada a la producción, por lo que el producto marginal es exactamente igual a cero (\\(PMg_L = 0\\)).",
+            incorrectFeedback: "Incorrecto. Cuando la curva de Producto Total alcanza su punto máximo (pendiente cero), su derivada (que es el producto marginal) debe ser igual a cero (\\(PMg_L = 0\\)), marcando el fin de la etapa II de producción."
+        },
+        {
+            question: "¿Por qué se verifica de manera inexorable la Ley de los Rendimientos Marginales Decrecientes en el corto plazo?",
+            options: {
+                A: "Debido a que los nuevos trabajadores incorporados al proceso productivo tienen menor nivel de capacitación.",
+                B: "Debido a que la cantidad de factor variable (trabajo) se combina con una cantidad constante de factor fijo (capital), saturando las proporciones eficientes.",
+                C: "Debido a que las economías de escala a largo plazo disminuyen cuando la producción se duplica.",
+                D: "Debido a que el precio del factor variable disminuye proporcionalmente a medida que la escala aumenta."
+            },
+            correct: "B",
+            correctFeedback: "¡Así es! Al haber un factor fijo (como una parcela de tierra o maquinaria), la incorporación sucesiva de trabajadores altera las proporciones óptimas de uso, haciendo que la productividad de cada trabajador adicional disminuya progresivamente.",
+            incorrectFeedback: "Incorrecto. Esta ley no depende de la calidad del factor de trabajo (los trabajadores se consideran homogéneos), sino de la existencia de un factor fijo que limita y congestiona la escala en el corto plazo."
+        },
+        {
+            question: "¿Cómo se define y calcula el coeficiente de elasticidad de la producción respecto al factor trabajo (\\(\\varepsilon_{Q,L}\\))?",
+            options: {
+                A: "Es la variación absoluta del producto total dividida por la variación del salario nominal de corto plazo.",
+                B: "Es el cambio relativo de las isocuantas de producción respecto al sendero de expansión de largo plazo.",
+                C: "Es el cambio porcentual de la producción respecto al cambio porcentual del factor trabajo, equivalente al cociente: \\(\\varepsilon_{Q,L} = \\frac{PMg_L}{PMe_L}\\).",
+                D: "Es el inverso multiplicativo de la tasa de sustitución técnica de los factores variables."
+            },
+            correct: "C",
+            correctFeedback: "¡Excelente! La elasticidad de producción mide la sensibilidad relativa de la cantidad producida ante cambios en el factor variable: \\(\\varepsilon_{Q,L} = \\frac{\\% \\Delta Q}{\\% \\Delta L} = \\frac{\\Delta Q}{\\Delta L} \\cdot \\frac{L}{Q} = \\frac{PMg_L}{PMe_L}\\).",
+            incorrectFeedback: "Incorrecto. La elasticidad es una relación de cambios porcentuales que, al desarrollarse algebraicamente, se simplifica como el cociente entre el producto marginal y el producto medio del factor."
+        },
+        {
+            question: "La Etapa I de la producción para el factor trabajo variable tiene como límites espaciales:",
+            options: {
+                A: "Comenzar donde la contratación es nula (\\(L = 0\\)) y finalizar en el óptimo técnico, donde el producto medio es máximo (\\(PMg_L = PMe_L\\), o \\(\\varepsilon_{Q,L} = 1\\)).",
+                B: "Comenzar en el punto de inflexión del producto total y finalizar en el máximo técnico.",
+                C: "Abarcar todo el intervalo de contratación donde el producto marginal es negativo.",
+                D: "Comenzar donde el producto marginal es máximo y finalizar donde el producto total es máximo."
+            },
+            correct: "A",
+            correctFeedback: "¡Perfecto! La Etapa I abarca desde el origen hasta el punto donde finalizan los rendimientos promedio crecientes (máximo de \\(PMe_L\\)). En este punto se igualan el producto marginal y medio, haciendo que \\(\\varepsilon_{Q,L} = 1\\).",
+            incorrectFeedback: "Incorrecto. La primera etapa termina donde la productividad media llega a su punto máximo, que es exactamente el punto donde el producto medio se iguala con el marginal (óptimo técnico)."
+        },
+        {
+            question: "En términos de eficiencia económica, ¿qué ocurre con el factor de producción fijo (capital) durante la Etapa I del proceso productivo?",
+            options: {
+                A: "El capital se utiliza al máximo de su capacidad con rendimientos marginales crecientes del dinero invertido.",
+                B: "El capital se combina en proporciones óptimas respecto al factor variable.",
+                C: "El capital no ejerce ninguna influencia sobre el rendimiento medio de la mano de obra contratada.",
+                D: "El capital está severamente subutilizado, lo que significa que el producto marginal del capital (\\(PMg_K\\)) es negativo debido a la escasez del factor variable."
+            },
+            correct: "D",
+            correctFeedback: "¡Brillante! En la Etapa I, la cantidad de trabajo es tan pequeña que la capacidad instalada fija de capital está desperdiciada (subutilizada). Al ser ineficiente para el factor fijo, un productor racional jamás elegirá producir en esta etapa.",
+            incorrectFeedback: "Incorrecto. Durante la Etapa I, la escasez de trabajadores hace que la maquinaria o infraestructura (factor fijo) esté subutilizada, haciendo que la productividad marginal del capital sea técnicamente negativa."
+        },
+        {
+            question: "La Etapa II de la producción (rango de eficiencia racional para la toma de decisiones) se extiende desde:",
+            options: {
+                A: "El punto donde el producto marginal es cero hasta que la producción es nula.",
+                B: "El origen de contratación hasta el punto de inflexión de la curva de producto total.",
+                C: "El óptimo técnico (\\(PMe_L\\) máximo, o \\(PMg_L = PMe_L\\)) hasta el máximo técnico (\\(PT\\) máximo, o \\(PMg_L = 0\\)).",
+                D: "El punto donde el producto marginal es máximo hasta el óptimo técnico de la empresa."
+            },
+            correct: "C",
+            correctFeedback: "¡Así es! La Etapa II es la etapa óptima para situar la producción de corto plazo. Aquí ambos productos (medio y marginal) son decrecientes pero positivos, lo que significa que ambos factores se utilizan con eficiencia técnica positiva.",
+            incorrectFeedback: "Incorrecto. El rango racional de producción (Etapa II) se define entre el punto de máximo producto medio (óptimo técnico) y el punto donde el producto marginal es cero (máximo técnico)."
+        },
+        {
+            question: "¿Qué valor asume el coeficiente de elasticidad de la producción (\\(\\varepsilon_{Q,L}\\)) a lo largo de toda la Etapa II?",
+            options: {
+                A: "Es estrictamente mayor que la unidad (\\(\\varepsilon_{Q,L} > 1\\)).",
+                B: "Se sitúa en el rango cerrado entre cero y uno (\\(0 \\le \\varepsilon_{Q,L} \\le 1\\)).",
+                C: "Es estrictamente menor que cero (\\(\\varepsilon_{Q,L} < 0\\)).",
+                D: "Se mantiene constante e igual a cero."
+            },
+            correct: "B",
+            correctFeedback: "¡Excelente! Como en la Etapa II el producto marginal es positivo pero menor que el producto medio (\\(PMg_L \\le PMe_L\\)), el cociente \\(PMg_L / PMe_L\\) siempre dará un valor comprendido entre 0 y 1.",
+            incorrectFeedback: "Incorrecto. En la etapa II, el producto marginal es menor que el producto medio, lo que implica que el coeficiente de elasticidad producto es menor o igual a 1, pero mayor o igual a 0."
+        },
+        {
+            question: "¿Cómo se comporta la producción en la Etapa III de corto plazo y por qué es una zona técnicamente ineficiente?",
+            options: {
+                A: "El producto medio aumenta y el costo unitario de producción disminuye paralelamente.",
+                B: "La producción aumenta a tasas decrecientes debido al progreso tecnológico neutral.",
+                C: "El capital físico se utiliza de manera óptima reduciendo la depreciación de las máquinas.",
+                D: "Se inicia donde \\(PMg_L = 0\\) y se caracteriza por presentar un producto marginal negativo (\\(PMg_L < 0\\)), lo que significa que incorporar trabajadores reduce la producción total."
+            },
+            correct: "D",
+            correctFeedback: "¡Correcto! En la Etapa III, la sobredimensión de trabajadores satura de tal manera la planta física (capital fijo) que estos se estorban entre sí, provocando una caída neta de la producción total (\\(PMg_L < 0\\)).",
+            incorrectFeedback: "Incorrecto. En la Etapa III, la incorporación de factor variable reduce la cantidad de producto total, lo que significa que el producto marginal es negativo (\\(PMg_L < 0\\)), operando de manera absurda e ineficiente."
+        },
+        {
+            question: "Dada la función de producción Cobb-Douglas de corto plazo \\(Q = 10 K^{0.2} L^{0.8}\\), obtenga la expresión analítica del producto marginal del trabajo (\\(PMg_L\\)):",
+            options: {
+                A: "\\(PMg_L = 8 K^{0.2} L^{-0.2}\\)",
+                B: "\\(PMg_L = 10 K^{-0.8} L^{0.8}\\)",
+                C: "\\(PMg_L = 0.8 K^{0.2} L^{0.8}\\)",
+                D: "\\(PMg_L = 2 K^{0.2} L^{-0.2}\\)"
+            },
+            correct: "A",
+            correctFeedback: "¡Correcto! Derivando parcialmente respecto a \\(L\\): \\(PMg_L = \\frac{\\partial Q}{\\partial L} = 10 \\cdot 0.8 \\cdot K^{0.2} L^{0.8 - 1} = 8 K^{0.2} L^{-0.2}\\). Esto representa la tasa marginal de aporte físico de la mano de obra.",
+            incorrectFeedback: "Incorrecto. Al aplicar la regla de derivación básica de potencias, se multiplica el coeficiente 10 por el exponente 0.8 (obteniendo 8) y se resta 1 al exponente de L, lo cual da \\(PMg_L = 8 K^{0.2} L^{-0.2}\\)."
+        },
+        {
+            question: "Sea la función de producción Cobb-Douglas \\(Q = 100 K^{0.5} L^{0.5}\\). Si el capital se mantiene fijo en el nivel de \\(K^0 = 16\\) unidades en el corto plazo, calcule la expresión del producto marginal del trabajo:",
+            options: {
+                A: "\\(PMg_L = 400 L^{-0.5}\\)",
+                B: "\\(PMg_L = 200 L^{-0.5}\\)",
+                C: "\\(PMg_L = 100 L^{0.5}\\)",
+                D: "\\(PMg_L = 200 L^{0.5}\\)"
+            },
+            correct: "B",
+            correctFeedback: "¡Excelente cálculo! Reemplazando \\(K = 16\\), la función de producción de corto plazo es \\(Q = 100(16)^{0.5} L^{0.5} = 400 L^{0.5}\\). Al derivar respecto a \\(L\\): \\(PMg_L = 400 \\cdot 0.5 \\cdot L^{-0.5} = 200 L^{-0.5}\\).",
+            incorrectFeedback: "Incorrecto. Si \\(K = 16\\), su raíz cuadrada es 4, por lo que \\(Q = 400 L^{0.5}\\). Al derivar respecto a \\(L\\), se obtiene \\(400 \\cdot 0.5 \\cdot L^{-0.5} = 200 L^{-0.5}\\) (opción B)."
+        },
+        {
+            question: "Para cualquier función de producción Cobb-Douglas de tipo \\(Q = A K^a L^b\\), el exponente del factor variable \\(b\\) representa de manera directa:",
+            options: {
+                A: "La elasticidad de la producción respecto al factor trabajo (\\(\\varepsilon_{Q,L} = b\\)), indicando el cambio porcentual de la producción ante un cambio del 1% de L.",
+                B: "El valor de la pendiente de la curva de producto medio en el tramo de rendimientos decrecientes.",
+                C: "La participación porcentual de los costos fijos en el costo total de la firma.",
+                D: "El salario real de equilibrio del mercado competitivo de factores."
+            },
+            correct: "A",
+            correctFeedback: "¡Exacto! En la función Cobb-Douglas, el exponente del trabajo \\(b\\) coincide de forma constante con el coeficiente de elasticidad de la producción (\\(\\varepsilon_{Q,L} = \\frac{PMg_L}{PMe_L} = \\frac{b(Q/L)}{Q/L} = b\\)).",
+            incorrectFeedback: "Incorrecto. Se puede comprobar analíticamente que en la especificación Cobb-Douglas, el exponente del factor variable equivale directamente a la elasticidad de la producción de dicho factor."
+        },
+        {
+            question: "¿Cómo se representa el progreso tecnológico de tipo neutral en la función de producción de corto plazo de la firma?",
+            options: {
+                A: "Provoca que la función de producción se desplace hacia abajo reduciendo el aporte del trabajo.",
+                B: "Desplaza la recta presupuestaria paralelamente hacia afuera modificando los precios relativos.",
+                C: "Genera que la curva de producto medio de corto plazo se convierta en una línea perfectamente horizontal.",
+                D: "Desplaza la función de producción hacia arriba (\\(Q = A(t)f(L, K^0)\\) con \\(dA/dt > 0\\)), permitiendo obtener más producto total con la misma cantidad de factores."
+            },
+            correct: "D",
+            correctFeedback: "¡Brillante! El progreso tecnológico neutral (a veces llamado en el sentido de Solow) se modela mediante un factor \\(A(t)\\) multiplicativo que incrementa la eficiencia de todos los factores de forma uniforme, desplazando las curvas de producto total, medio y marginal hacia arriba.",
+            incorrectFeedback: "Incorrecto. El progreso tecnológico neutral se modela como un coeficiente multiplicativo \\(A(t)\\) que desplaza de forma ascendente las funciones de productividad de corto plazo (opción D)."
+        },
+        {
+            question: "¿Cuándo se define que el progreso tecnológico es del tipo 'ahorrador de trabajo' (labor-saving) de acuerdo con los cambios en las productividades marginales?",
+            options: {
+                A: "Cuando incrementa de manera proporcionalmente mayor la productividad marginal del capital (\\(PMg_K\\)) que la del trabajo (\\(PMg_L\\)) para una relación capital-trabajo dada.",
+                B: "Cuando reduce el nivel de eficiencia técnica en la asignación global de factores de la empresa.",
+                C: "Cuando exige que la empresa opere de forma exclusiva bajo una tecnología de proporciones fijas Leontief.",
+                D: "Cuando la elasticidad de sustitución de los factores disminuye de manera asintótica hacia cero."
+            },
+            correct: "A",
+            correctFeedback: "¡Correcto! Si para una relación capital-trabajo constante el progreso tecnológico incrementa relativamente más la productividad del capital que la del trabajo, incentiva el uso de procesos más mecanizados (ahorrando mano de obra).",
+            incorrectFeedback: "Incorrecto. Un progreso tecnológico es ahorrador de trabajo si sesga y eleva la eficiencia marginal del capital sobre la del trabajo para una proporción de insumos constante (opción A)."
+        },
+        {
+            question: "El llamado 'punto de inflexión' en la curva de producto total de corto plazo se caracteriza geométricamente por:",
+            options: {
+                A: "Coincidir con el punto de producto total máximo absoluto.",
+                B: "Representar el inicio de la ineficiente Etapa III de la producción.",
+                C: "Coincidir exactamente con el punto donde el producto marginal del trabajo (\\(PMg_L\\)) alcanza su valor máximo.",
+                D: "Ocurrir cuando la curva de producto medio interseca a las isocuantas de largo plazo."
+            },
+            correct: "C",
+            correctFeedback: "¡Excelente! En el punto de inflexión del producto total, la producción cambia de crecer a tasas crecientes a crecer a tasas decrecientes. Matemáticamente, la primera derivada (el producto marginal) llega a su punto máximo exacto.",
+            incorrectFeedback: "Incorrecto. En la inflexión del producto total, la curva cambia su curvatura (de convexa a cóncava respecto al origen), lo que significa geométricamente que el producto marginal alcanza su valor máximo (opción C)."
+        },
+        {
+            question: "¿Cuál es la relación matemática que vincula de manera dual al costo marginal de corto plazo (\\(CMg\\)) con el producto marginal del trabajo (\\(PMg_L\\))?",
+            options: {
+                A: "Son variables independientes que no presentan ningún tipo de vinculación matemática formal.",
+                B: "Son directamente proporcionales: ante incrementos de la productividad del trabajo, el costo marginal se eleva en la misma proporción.",
+                C: "El costo marginal equivale al producto marginal del trabajo multiplicado por la tasa de interés real de balance.",
+                D: "Son inversamente proporcionales de acuerdo con la expresión: \\(CMg = \\frac{w}{PMg_L}\\). Por lo tanto, cuando el producto marginal es máximo, el costo marginal es mínimo."
+            },
+            correct: "D",
+            correctFeedback: "¡Perfecto! Existe una relación inversa y simétrica entre costos y productividades de corto plazo: \\(CMg = \\frac{w}{PMg_L}\\). Esto explica por qué el tramo de costos marginales decrecientes se debe a productividades marginales crecientes.",
+            incorrectFeedback: "Incorrecto. Debido a la dualidad costo-producción, el costo marginal y el producto marginal del factor variable se vinculan de manera inversa: \\(CMg = \\frac{w}{PMg_L}\\). El mínimo del CMg se da en el máximo de PMgL."
+        },
+        {
+            question: "¿Cómo se vincula el costo variable medio de corto plazo (\\(CVM\\)) con el producto medio del trabajo (\\(PMe_L\\))?",
+            options: {
+                A: "De manera inversamente proporcional de acuerdo con la fórmula: \\(CVM = \\frac{w}{PMe_L}\\), haciendo que el costo variable medio sea mínimo cuando el producto medio es máximo.",
+                B: "De manera lineal e independiente, ya que el costo variable medio solo se afecta por la escala y el tamaño de la planta.",
+                C: "Coinciden únicamente en el óptimo del productor de largo plazo cuando los costos fijos son nulos.",
+                D: "Crecen de manera paralela debido al progreso tecnológico neutral en el sentido de Solow."
+            },
+            correct: "A",
+            correctFeedback: "¡Muy bien! El costo variable promedio por unidad producida es el salario dividido por la productividad media del factor variable (\\(CVM = \\frac{w}{PMe_L}\\)). Por ello, el óptimo técnico (mínimo de CVM) coincide con el punto de máxima eficiencia física de los trabajadores.",
+            incorrectFeedback: "Incorrecto. La fisonomía del costo variable medio responde de forma dual e inversa a la curva del producto medio: \\(CVM = \\frac{w}{PMe_L}\\), por lo que el mínimo de CVM ocurre en el máximo de PMeL (óptimo técnico)."
+        },
+        {
+            question: "Si la elasticidad de la producción del trabajo es estrictamente negativa (\\(\\varepsilon_{Q,L} < 0\\)), esto indica con seguridad que:",
+            options: {
+                A: "La empresa competitiva está operando de manera eficiente en el tramo final de la Etapa I.",
+                B: "La empresa competitiva está optimizando el uso de sus factores fijos en la Etapa II.",
+                C: "El producto marginal del trabajo es negativo (\\(PMg_L < 0\\)), situando a la firma en la ineficiente Etapa III.",
+                D: "Los rendimientos de escala a largo plazo son decrecientes debido a deseconomías de escala."
+            },
+            correct: "C",
+            correctFeedback: "¡Brillante! Dado que \\(\\varepsilon_{Q,L} = \\frac{PMg_L}{PMe_L}\\) y la productividad media siempre es positiva, una elasticidad negativa exige que el producto marginal del trabajo sea negativo (\\(PMg_L < 0\\)), lo que ocurre exclusivamente en la Etapa III.",
+            incorrectFeedback: "Incorrecto. Como la productividad promedio es positiva, si la elasticidad es negativa, necesariamente el producto marginal debe ser menor a cero (\\(PMg_L < 0\\)), ubicando la producción en la Etapa III."
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let correctAnswers = 0;
+    let incorrectAnswers = 0;
+
+    const quizFlowEl = document.getElementById('quiz-flow');
+    const questionTextEl = document.getElementById('question-text');
+    const optionsContainerEl = document.getElementById('options-container');
+    const quizCardEl = document.getElementById('quiz-card');
+    const cardBackEl = document.getElementById('card-back');
+    const resultTitleEl = document.getElementById('result-title');
+    const feedbackTextEl = document.getElementById('feedback-text');
+    const nextBtn = document.getElementById('next-btn');
+    const progressFillEl = document.getElementById('progress-fill');
+    const questionCounterEl = document.getElementById('question-counter');
+    const scoreCounterEl = document.getElementById('score-counter');
+
+    const summaryScreenEl = document.getElementById('summary-screen');
+    const summaryScoreEl = document.getElementById('summary-score');
+    const summaryMessageEl = document.getElementById('summary-message');
+    const restartBtn = document.getElementById('restart-btn');
+
+    function loadQuestion() {
+        // Reiniciar clases de la tarjeta
+        quizCardEl.classList.remove('flipped');
+        cardBackEl.classList.remove('correct-border', 'incorrect-border');
+
+        const currentQuestion = quizData[currentQuestionIndex];
+        
+        // Actualizar textos e indicativos
+        questionCounterEl.textContent = `Pregunta ${currentQuestionIndex + 1} de ${quizData.length}`;
+        questionTextEl.innerHTML = currentQuestion.question;
+        
+        // Calcular porcentaje progreso
+        const progressPercentage = ((currentQuestionIndex) / quizData.length) * 100;
+        progressFillEl.style.width = `${progressPercentage === 0 ? 5 : progressPercentage}%`;
+
+        // Generar opciones de respuesta
+        optionsContainerEl.innerHTML = '';
+        Object.entries(currentQuestion.options).forEach(([key, value]) => {
+            const button = document.createElement('button');
+            button.className = 'option-btn';
+            button.innerHTML = `<strong>${key})</strong> ${value}`;
+            button.onclick = () => selectOption(key);
+            optionsContainerEl.appendChild(button);
+        });
+
+        // Forzar a MathJax a procesar el nuevo contenido cargado
+        if (window.MathJax) {
+            MathJax.typesetPromise();
+        }
+    }
+
+    function selectOption(selectedKey) {
+        const currentQuestion = quizData[currentQuestionIndex];
+        const isCorrect = selectedKey === currentQuestion.correct;
+
+        if (isCorrect) {
+            correctAnswers++;
+            resultTitleEl.textContent = "¡Correcto!";
+            resultTitleEl.className = "result-title correct";
+            cardBackEl.classList.add('correct-border');
+            feedbackTextEl.innerHTML = currentQuestion.correctFeedback;
+        } else {
+            incorrectAnswers++;
+            resultTitleEl.textContent = "Incorrecto";
+            resultTitleEl.className = "result-title incorrect";
+            cardBackEl.classList.add('incorrect-border');
+            feedbackTextEl.innerHTML = currentQuestion.incorrectFeedback;
+        }
+
+        // Actualizar estadísticas del marcador
+        scoreCounterEl.textContent = `Correctas: ${correctAnswers} | Incorrectas: ${incorrectAnswers}`;
+
+        // Girar la tarjeta para mostrar la devolución
+        quizCardEl.classList.add('flipped');
+
+        if (window.MathJax) {
+            MathJax.typesetPromise();
+        }
+    }
+
+    nextBtn.onclick = () => {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) {
+            loadQuestion();
+        } else {
+            showSummary();
+        }
+    };
+
+    function showSummary() {
+        quizFlowEl.classList.add('hidden');
+        summaryScreenEl.classList.remove('hidden');
+        summaryScoreEl.textContent = `${correctAnswers} / ${quizData.length}`;
+
+        const scorePercent = (correctAnswers / quizData.length) * 100;
+        if (scorePercent >= 90) {
+            summaryMessageEl.textContent = "¡Espectacular! Has demostrado un nivel académico excepcional y un absoluto dominio en el cálculo de productividades, delimitación de las etapas de producción de corto plazo y el análisis dual de costos y elasticidades.";
+        } else if (scorePercent >= 70) {
+            summaryMessageEl.textContent = "¡Excelente! Tienes muy claras las etapas de producción y la ley de rendimientos decrecientes. Te sugerimos repasar la derivación Cobb-Douglas para lograr el puntaje perfecto.";
+        } else {
+            summaryMessageEl.textContent = "Buen intento. Te recomendamos repasar el Capítulo de Producción de Corto Plazo en los textos de Nicholson y Pyndick para consolidar tus conocimientos en la materia.";
+        }
+    }
+
+    restartBtn.onclick = () => {
+        currentQuestionIndex = 0;
+        correctAnswers = 0;
+        incorrectAnswers = 0;
+        scoreCounterEl.textContent = `Correctas: 0 | Incorrectas: 0`;
+        summaryScreenEl.classList.add('hidden');
+        quizFlowEl.classList.remove('hidden');
+        loadQuestion();
+    };
+
+    // Cargar la primera pregunta al inicio
+    loadQuestion();
+</script>
+
+</body>
+</html>
