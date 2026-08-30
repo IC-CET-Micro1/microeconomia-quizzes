@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microeconomía - Portal de Cuestionarios</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f6f9; color: #333; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .descripcion { color: #7f8c8d; font-size: 1.1em; margin-bottom: 30px; }
+        .unidad-seccion { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .unidad-titulo { color: #2980b9; margin-top: 0; text-transform: uppercase; font-size: 1.2em; }
+        .quiz-card { border-left: 4px solid #3498db; padding-left: 15px; margin: 15px 0; display: flex; justify-content: space-between; align-items: center; }
+        .quiz-info h3 { margin: 0 0 5px 0; color: #2c3e50; }
+        .quiz-info p { margin: 0; color: #7f8c8d; font-size: 0.9em; }
+        .btn { background-color: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; transition: background 0.2s; }
+        .btn:hover { background-color: #2980b9; }
+        #loading { font-style: italic; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+
+    <h1>Microeconomía</h1>
+    <p class="descripcion">Plataforma de Evaluación Continua. Seleccioná el cuestionario correspondiente a la unidad en curso.</p>
+
+    <!-- Contenedor dinámico donde aparecerán las unidades y quizzes -->
+    <div id="contenedor-quizzes">
+        <p id="loading">Cargando cuestionarios disponibles...</p>
+    </div>
+
+    <footer>
+        <p style="text-align: center; margin-top: 50px; color: #bdc3c7; font-size: 0.9em;">&copy; 2026 Cátedra de Microeconomía - Evaluaciones en línea</p>
+    </footer>
+
+    <script>
+        // CONFIGURACIÓN: Reemplazá estos dos datos con los tuyos de GitHub
+        const USUARIO_GITHUB = "TU_USUARIO_DE_GITHUB"; 
+        const REPOSITORIO_GITHUB = "NOMBRE_DE_TU_REPOSITORIO";
+
+        async function cargarQuizzes() {
+            const contenedor = document.getElementById('contenedor-quizzes');
+            
+            try {
+                // 1. Consultar las carpetas raíz del repositorio mediante la API de GitHub
+                const respuesta = await fetch(`https://github.com{USUARIO_GITHUB}/${REPOSITORIO_GITHUB}/contents`);
+                if (!respuesta.ok) throw new Error("No se pudo conectar con el repositorio");
+                
+                const elementos = await respuesta.json();
+                
+                // Filtrar solo las carpetas que representen unidades (ej: unidad1, unidad2, etc.)
+                const carpetasUnidades = elementos.filter(el => el.type === 'dir' && el.name.startsWith('unidad'));
+                
+                if (carpetasUnidades.length === 0) {
+                    contenedor.innerHTML = '<p>No se encontraron carpetas de unidades todavía.</p>';
+                    return;
+                }
+
+                contenedor.innerHTML = ''; // Limpiar el texto de carga
+
+                // 2. Recorrer cada carpeta de unidad encontrada
+                for (const carpeta of carpetasUnidades) {
+                    // Crear sección visual para la unidad
+                    const seccionUnidad = document.createElement('div');
+                    seccionUnidad.className = 'unidad-seccion';
+                    
+                    // Formatear el título de la carpeta (ej: "unidad1" -> "Unidad 1")
+                    const nombreFormateado = carpeta.name.replace(/(\d+)/, ' $1').replace(/^\w/, c => c.toUpperCase());
+                    seccionUnidad.innerHTML = `<h2 class="unidad-titulo">${nombreFormateado}</h2>`;
+
+                    // Buscar los archivos HTML dentro de esa carpeta de unidad
+                    const resContenido = await fetch(carpeta.url);
+                    const archivos = await resContenido.json();
+                    const quizzesHtml = archivos.filter(arch => arch.name.endsWith('.html'));
+
+                    // 3. Crear los botones para cada cuestionario hallado
+                    quizzesHtml.forEach(quiz => {
+                        // Formatear nombre del archivo (ej: "quiz1.html" -> "Quiz 1")
+                        const nombreQuiz = quiz.name.replace('.html', '').replace(/(\d+)/, ' $1').replace(/^\w/, c => c.toUpperCase());
+                        
+                        // Ruta de acceso al quiz en GitHub Pages
+                        const urlQuiz = `https://${USUARIO_GITHUB}.github.io/${REPOSITORIO_GITHUB}/${carpeta.name}/${quiz.name}`;
+
+                        const quizCard = document.createElement('div');
+                        quizCard.className = 'quiz-card';
+                        quizCard.innerHTML = `
+                            <div class="quiz-info">
+                                <h3>${nombreQuiz}</h3>
+                                <p>Cuestionario de evaluación correspondiente a la ${nombreFormateado.toLowerCase()}.</p>
+                            </div>
+                            <a href="${urlQuiz}" class="btn">Comenzar Quiz</a>
+                        `;
+                        seccionUnidad.appendChild(quizCard);
+                    });
+
+                    // Si la carpeta tiene quizzes válidos, la agregamos a la pantalla principal
+                    if (quizzesHtml.length > 0) {
+                        contenedor.appendChild(seccionUnidad);
+                    }
+                }
+
+            } catch (error) {
+                console.error(error);
+                contenedor.innerHTML = '<p style="color: red;">Error al cargar los cuestionarios de forma dinámica.</p>';
+            }
+        }
+
+        // Ejecutar la función automáticamente al abrir la página
+        cargarQuizzes();
+    </script>
+</body>
+</html>
